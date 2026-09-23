@@ -1,4 +1,6 @@
 .env
+outputs/*
+!outputs/.gitkeep
 storage/*
 !storage/.gitkeep
 __pycache__/

@@ -8,9 +8,10 @@ import zipfile
 from PIL import Image,ImageDraw
 from service import database
 from pipeline import ROOT,ProcessingError,process
+from outputs import run_directory,export_path,sync_run
 
 def redact(payload):
-    rid=payload['run_id'];fid=payload['frame_id'];box=payload['box'];folder=ROOT/'runs'/rid
+    rid=payload['run_id'];fid=payload['frame_id'];box=payload['box'];folder=run_directory(rid)
     with database() as db:stage=db.execute("SELECT result FROM stages WHERE run_id=%s AND name='frames'",(rid,)).fetchone()['result']
     frame=next(f for f in stage['frames'] if f['id']==fid)
     path=folder/'frames'/f'{fid}.jpg'
@@ -25,6 +26,7 @@ def redact(payload):
         db.execute("UPDATE stages SET result=%s WHERE run_id=%s AND name='frames'",(json.dumps(stage),rid))
         db.execute("UPDATE stages SET status='pending',result=NULL WHERE run_id=%s AND name IN ('ocr','screens')",(rid,))
         db.execute("UPDATE runs SET config=config-'redaction_pending' WHERE id=%s",(rid,))
+    sync_run(rid)
     return process(rid)
 
 def inventory(iid):
@@ -61,7 +63,7 @@ def export_package(aid):
         snapshot=db.execute('SELECT * FROM snapshots WHERE id=%s',(artifact['snapshot_id'],)).fetchone()
     data=snapshot['payload'];rid=artifact['run_id'];claims=data['claims']
     if not claims or any(c['review_status']!='approved' or not c['evidence'] for c in claims):raise ProcessingError('Snapshot não contém conhecimento aprovado válido.')
-    run_folder=ROOT/'runs'/rid
+    run_folder=run_directory(rid)
     approved_evidence={e['id']:e for c in claims for e in c['evidence']}
     frames={f['id']:f for f in data['frames']['frames']}
     segments={s['id']:s for s in data['transcript']['segments']}
@@ -98,7 +100,7 @@ def export_package(aid):
         if name.endswith(('.json','.yaml')):json.loads(content)
     manifest={'schema_version':'1.0','application_version':data['application_version'],'snapshot_id':snapshot['id'],'run_id':rid,'video_id':data['run']['video_id'],'run_version':data['run']['version'],'created_at':snapshot['created_at'].isoformat(),'model_profile':'astra','model_used':False,'prompt_version':'manual-v1','engines':{'transcription':data['transcript'].get('engine'),'ocr':data['ocr'].get('engine')},'sensitivity':data['run']['sensitivity'],'claims':len(claims),'files':[{'path':name,'sha256':hashlib.sha256(content).hexdigest(),'bytes':len(content)} for name,content in sorted(files.items())]}
     structured('MANIFEST.json',manifest)
-    export_dir=ROOT/'exports';export_dir.mkdir(exist_ok=True);path=export_dir/f'{aid}.zip';temp=path.with_suffix('.tmp')
+    path=export_path(aid);temp=path.with_suffix('.tmp')
     with zipfile.ZipFile(temp,'w',compression=zipfile.ZIP_DEFLATED) as archive:
         for name,content in files.items():archive.writestr('system-knowledge/'+name,content)
     with zipfile.ZipFile(temp) as archive:

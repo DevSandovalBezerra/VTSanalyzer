@@ -14,6 +14,7 @@ import time
 import uuid
 from PIL import Image, ImageDraw
 from service import database
+from outputs import run_directory
 
 ROOT=Path('/data')
 ORDER=['audio','transcript','frames','ocr','screens']
@@ -163,7 +164,7 @@ def process(rid):
         if run['config'].get('redaction_pending'):raise ProcessingError('Ocultação pendente. Repita a ocultação antes de analisar.')
         if run['status']=='cancelled':raise Cancelled()
         db.execute("UPDATE runs SET status='processing',error=NULL,updated_at=now() WHERE id=%s",(rid,))
-    folder=ROOT/'runs'/rid;folder.mkdir(parents=True,exist_ok=True)
+    folder=run_directory(rid)
     results={}
     for name in ORDER:
         cancelled(rid)

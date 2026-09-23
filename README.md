@@ -11,6 +11,8 @@ cd ~/projetos/system-knowledge-extractor
 cp .env.example .env
 # Substitua POSTGRES_PASSWORD e REDIS_PASSWORD por segredos aleatórios.
 chmod 600 .env
+docker compose build worker
+bash scripts/prepare-outputs.sh
 docker compose -f compose.yml -f compose.dev.yml up -d --build --wait
 docker compose exec -T web php bin/migrate.php
 read -rs -p 'Senha inicial (mínimo 12 caracteres): ' initial_password
@@ -60,3 +62,13 @@ O usuário decidiu definir o acesso posteriormente. `MODEL_PROFILE=astra` é um 
 `tests/foundation.py` exercita autenticação, CSRF, isolamento entre contas, versionamento de projetos, fila real e diagnóstico. `scripts/verify-foundation.sh` verifica persistência após recriação, bind mounts, FFmpeg e alvo somente leitura. `tests/media.py` e `tests/knowledge.py` exercitam o fluxo com mídia sintética, ocultação e pacote final. `tests/transcription.py` testa narração sintética em português contra o Whisper local. Consulte `docs/STATUS.md` para o escopo realmente validado e as pendências do PRD.
 
 Os scripts `checkpoint.sh`, `media-checkpoint.sh`, `validate.sh` e `prepare-model.sh` foram usados na instalação inicial a partir do pacote Windows. Eles copiam arquivos para o repositório WSL. **Não os reaplique sobre trabalho posterior no WSL.** Para continuar o desenvolvimento, edite diretamente o repositório Linux e execute os testes ali.
+
+## Outputs por projeto
+
+Os arquivos derivados ficam em `outputs/<nome-do-projeto>--<id>/`, no próprio repositório WSL. No Windows, abra `\\wsl.localhost\Ubuntu-24.04\home\user\projetos\system-knowledge-extractor\outputs`. Cada pasta contém `projeto.json` e `LEIA-ME.txt` para identificação; o nome da pasta permanece estável ao renomear o projeto.
+
+Dentro de `videos/<id>/analises/vNNN--<id>/` ficam áudio WAV (quando disponível), frames JPG, folha de contato (quando disponível), transcrição TXT/SRT/JSON, OCR, telas, análise, histórico, snapshots e ZIPs exportados. `video.json` identifica o vídeo. Inventários de código ficam em `inventarios/` no projeto. Astra continua desativado.
+
+A pasta contém resultados de trabalho, incluindo itens ainda não aprovados. A fila atualiza os metadados após processamento e revisões; a atualização pode aguardar a tarefa em andamento. Imagens e ZIPs têm uma única localização, sem cópias paralelas no volume de mídia. O web tem acesso somente de leitura. Outputs são ignorados pelo Git e devem integrar o backup juntamente com o banco e o volume dos originais.
+
+Para uma instalação existente: pare web/worker/scheduler, prepare a pasta com `bash scripts/prepare-outputs.sh`, aplique `php bin/migrate.php` em um container web temporário, execute `docker compose run --rm --no-deps worker python outputs.py --migrate` e recrie os serviços. A migração compara SHA-256 antes de remover os arquivos antigos e pode ser retomada. Para regenerar somente JSON/TXT/SRT, use `docker compose exec -T worker python outputs.py` com o worker ocioso.

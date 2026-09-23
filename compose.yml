@@ -10,6 +10,7 @@ x-env: &env
   REDIS_HOST: redis
   REDIS_PASSWORD: ${REDIS_PASSWORD:?Configure .env}
   STORAGE_PATH: /data
+  OUTPUTS_PATH: /outputs
   MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-4294967296}
 services:
   postgres:
@@ -43,7 +44,7 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
     environment: *env
-    volumes: ["media:/data"]
+    volumes: ["media:/data", "./outputs:/outputs:ro"]
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
@@ -86,6 +87,7 @@ services:
       MAX_VIDEO_SECONDS: ${MAX_VIDEO_SECONDS:-7200}
     volumes:
       - media:/data
+      - ./outputs:/outputs
       - model-cache:/home/app/.cache
       - type: bind
         source: ${TARGET_SOURCE:-./tests/fixtures/target}

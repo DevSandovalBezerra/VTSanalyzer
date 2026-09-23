@@ -60,6 +60,7 @@ def main():
                 # Database outbox: re-delivery recovers crashes between DB commit and Redis notification.
                 with database() as db:
                     if db.execute("SELECT to_regclass('jobs') AS name").fetchone()['name']:
+                        db.execute("UPDATE jobs j SET status='failed',error='Sincronização substituída por outra pendente.' WHERE j.kind='outputs' AND j.status='processing' AND j.updated_at < now()-interval '90 seconds' AND EXISTS (SELECT 1 FROM jobs q WHERE q.project_id=j.project_id AND q.kind='outputs' AND q.status='queued')")
                         db.execute("UPDATE jobs SET status='queued' WHERE status='processing' AND updated_at < now()-interval '90 seconds'")
                         for job in db.execute("SELECT id FROM jobs WHERE status='queued' ORDER BY created_at LIMIT 100").fetchall():
                             if r.set('dispatch:'+job['id'], '1', nx=True, ex=30):
@@ -75,7 +76,11 @@ def main():
                 continue
             active_job[0]=job['id']
             try:
-                if job['kind']=='diagnostic':result=diagnostic()
+                if job['kind']=='outputs':
+                    import outputs
+                    importlib.reload(outputs)
+                    result=outputs.sync_project(job['payload']['project_id'])
+                elif job['kind']=='diagnostic':result=diagnostic()
                 else:
                     import pipeline
                     importlib.reload(pipeline)

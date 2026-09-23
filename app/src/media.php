@@ -4,8 +4,13 @@ function owned_video(string $vid): array {
     if(!$v)json_response(['error'=>'Vídeo não encontrado.'],404);return $v;
 }
 function owned_run(string $rid): array {
-    $r=query('SELECT r.*,v.project_id,v.title,v.sensitivity FROM runs r JOIN videos v ON r.video_id=v.id JOIN projects p ON v.project_id=p.id WHERE r.id=? AND p.owner_id=?',[$rid,$_SESSION['user']['id']])->fetch(PDO::FETCH_ASSOC);
+    $r=query('SELECT r.*,v.project_id,v.title,v.sensitivity,p.output_directory FROM runs r JOIN videos v ON r.video_id=v.id JOIN projects p ON v.project_id=p.id WHERE r.id=? AND p.owner_id=?',[$rid,$_SESSION['user']['id']])->fetch(PDO::FETCH_ASSOC);
     if(!$r)json_response(['error'=>'Execução não encontrada.'],404);return $r;
+}
+function run_output_path(array $run): string {
+    $directory=$run['output_directory'];
+    if(!$directory || !preg_match('/^[a-z0-9-]+--[a-f0-9]{32}$/D',$directory)) throw new RuntimeException('Pasta de saída ainda indisponível.');
+    return '/outputs/'.$directory.'/videos/'.$run['video_id'].'/analises/v'.str_pad((string)$run['version'],3,'0',STR_PAD_LEFT).'--'.$run['id'];
 }
 function enqueue(string $kind,string $pid,array $payload): string { $jid=id();query('INSERT INTO jobs(id,project_id,kind,payload) VALUES (?,?,?,?)',[$jid,$pid,$kind,json_encode($payload,JSON_THROW_ON_ERROR)]);return $jid; }
 function stage_result(string $rid,string $name): array { $s=query('SELECT result FROM stages WHERE run_id=? AND name=?',[$rid,$name])->fetchColumn();return $s?json_decode($s,true,64,JSON_THROW_ON_ERROR):[]; }
@@ -89,7 +94,7 @@ if(preg_match('#^/api/runs/([a-f0-9]{32})/(cancel|resume)$#',$path,$m)&&$method=
 }
 require __DIR__.'/knowledge.php';
 if(preg_match('#^/api/runs/([a-f0-9]{32})/frames/([a-f0-9]{32})$#',$path,$m)&&$method==='GET'){
-    $r=owned_run($m[1]);$frames=stage_result($r['id'],'frames')['frames']??[];$matches=array_values(array_filter($frames,fn($f)=>$f['id']===$m[2]));if(!$matches)json_response(['error'=>'Frame não encontrado.'],404);stream_file('/data/runs/'.$r['id'].'/frames/'.$m[2].'.jpg','image/jpeg');
+    $r=owned_run($m[1]);$frames=stage_result($r['id'],'frames')['frames']??[];$matches=array_values(array_filter($frames,fn($f)=>$f['id']===$m[2]));if(!$matches)json_response(['error'=>'Frame não encontrado.'],404);stream_file(run_output_path($r).'/frames/'.$m[2].'.jpg','image/jpeg');
 }
 if(preg_match('#^/api/runs/([a-f0-9]{32})/transcript/([a-f0-9]{32})$#',$path,$m)&&$method==='PATCH'){
     $r=owned_run($m[1]);if($r['status']!=='review')json_response(['error'=>'Edite somente quando a execução estiver em revisão.'],409);$v=input();$text=required($v,'text',8000);

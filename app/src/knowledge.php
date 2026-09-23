@@ -31,7 +31,7 @@ if(preg_match('#^/api/runs/([a-f0-9]{32})/exports$#',$path,$m)){
     if($method==='POST'){$s=query('SELECT id FROM snapshots WHERE run_id=? ORDER BY created_at DESC LIMIT 1',[$r['id']])->fetchColumn();if(!$s||$r['status']!=='approved')json_response(['error'=>'Aprove uma versão do conhecimento antes de exportar.'],422);$aid=id();db()->beginTransaction();query('INSERT INTO artifacts(id,run_id,snapshot_id) VALUES (?,?,?)',[$aid,$r['id'],$s]);enqueue('export',$r['project_id'],['artifact_id'=>$aid]);audit('export.queued',$aid);db()->commit();json_response(['id'=>$aid],202);}
 }
 if(preg_match('#^/api/exports/([a-f0-9]{32})$#',$path,$m)&&$method==='GET'){
-    $a=query('SELECT * FROM artifacts WHERE id=?',[$m[1]])->fetch(PDO::FETCH_ASSOC);if(!$a)json_response(['error'=>'Pacote não encontrado.'],404);owned_run($a['run_id']);if($a['status']!=='completed')json_response(['error'=>'Aguarde a geração do pacote.'],409);stream_file('/data/exports/'.$a['id'].'.zip','application/zip',true);
+    $a=query('SELECT * FROM artifacts WHERE id=?',[$m[1]])->fetch(PDO::FETCH_ASSOC);if(!$a)json_response(['error'=>'Pacote não encontrado.'],404);$r=owned_run($a['run_id']);if($a['status']!=='completed')json_response(['error'=>'Aguarde a geração do pacote.'],409);stream_file(run_output_path($r).'/exportacoes/'.$a['id'].'.zip','application/zip',true);
 }
 if(preg_match('#^/api/runs/([a-f0-9]{32})/redact$#',$path,$m)&&$method==='POST'){
     $r=owned_run($m[1]);if(!in_array($r['status'],['review','failed'],true))json_response(['error'=>'A ocultação exige execução em revisão ou falha.'],409);$v=input();$frames=stage_result($r['id'],'frames')['frames']??[];$frame=null;foreach($frames as $f)if($f['id']===($v['frame_id']??null))$frame=$f;

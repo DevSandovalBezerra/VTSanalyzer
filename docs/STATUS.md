@@ -60,3 +60,11 @@ O PRD completo **ainda não está concluído**. A entrega é uma primeira implem
 - CA-01/CA-02/CA-05 completos dependem da análise semântica futura. CA-03/CA-04/CA-06 tiveram seus mecanismos locais exercitados, mas não constituem avaliação de qualidade com vídeos reais de domínio.
 
 Não interpretar a presença dos arquivos de saída como conclusão das funcionalidades semânticas que dependem do Astra.
+
+## Outputs por projeto — 23/09/2026
+
+- Pasta `outputs/<nome>--<id>/` no WSL, legível pelo Windows, separada por vídeo e versão da análise.
+- Áudio e imagens têm localização única; transcrição TXT/SRT/JSON, OCR, telas, conclusões e histórico são sincronizados por outbox transacional após revisões.
+- Snapshots e ZIPs ficam junto à análise; inventários pertencem à pasta do projeto. O nome físico da pasta é estável, e os metadados acompanham renomeações.
+- Dados existentes migrados com comparação SHA-256 antes da remoção dos arquivos antigos. Outputs excluídos do Git e do contexto Docker; acesso do web somente leitura.
+- `tests/media.py`, `tests/knowledge.py` e `tests/transcription.py` passaram novamente. `tests/outputs.py` verificou atualização após edição, separação de projetos com nomes iguais, renomeação, áudio, frames ocultados, streaming, ZIPs e inventários.
