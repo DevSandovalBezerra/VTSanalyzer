@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS schema_migrations (version text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE users (id text PRIMARY KEY, email text UNIQUE NOT NULL, password_hash text NOT NULL, role text NOT NULL DEFAULT 'admin', created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE projects (id text PRIMARY KEY, owner_id text NOT NULL REFERENCES users(id), name text NOT NULL, objective text NOT NULL, domain text NOT NULL DEFAULT '', language text NOT NULL DEFAULT 'pt-BR', notes text NOT NULL DEFAULT '', status text NOT NULL DEFAULT 'active' CHECK(status IN ('active','archived')), version integer NOT NULL DEFAULT 1, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE project_versions (project_id text NOT NULL REFERENCES projects(id), version integer NOT NULL, data jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY(project_id,version));
+CREATE TABLE audit_events (id bigserial PRIMARY KEY, actor_id text REFERENCES users(id), action text NOT NULL, subject_id text, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE jobs (id text PRIMARY KEY, project_id text REFERENCES projects(id), kind text NOT NULL, status text NOT NULL DEFAULT 'queued' CHECK(status IN ('queued','processing','completed','failed','cancelled')), payload jsonb NOT NULL DEFAULT '{}', result jsonb, error text, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX jobs_pending ON jobs(status,created_at);

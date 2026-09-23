@@ -1,0 +1,13 @@
+# Opt-in: docker compose -f compose.yml -f compose.dev.yml -f compose.gpu.yml up -d
+# Validate the NVIDIA driver and container runtime before selecting this override.
+services:
+  worker:
+    environment:
+      COMPUTE_DEVICE: cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

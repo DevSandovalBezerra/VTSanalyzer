@@ -1,0 +1,120 @@
+name: system-knowledge-extractor
+x-env: &env
+  APP_ENV: ${APP_ENV:-local}
+  APP_VERSION: ${APP_VERSION:-0.1.0}
+  SESSION_SECURE: ${SESSION_SECURE:-0}
+  DB_HOST: postgres
+  POSTGRES_DB: ${POSTGRES_DB:-system_knowledge}
+  POSTGRES_USER: ${POSTGRES_USER:-system_knowledge}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure .env}
+  REDIS_HOST: redis
+  REDIS_PASSWORD: ${REDIS_PASSWORD:?Configure .env}
+  STORAGE_PATH: /data
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-system_knowledge}
+      POSTGRES_USER: ${POSTGRES_USER:-system_knowledge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure .env}
+    volumes: ["database:/var/lib/postgresql/data"]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  redis:
+    image: redis:7.4-alpine
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Configure .env}
+    command: [sh, -c, 'exec redis-server --appendonly yes --requirepass "$${REDIS_PASSWORD}"']
+    volumes: ["queue:/data"]
+    healthcheck:
+      test: [CMD-SHELL, 'REDISCLI_AUTH="$${REDIS_PASSWORD}" redis-cli ping | grep -q PONG']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  web:
+    image: ske-web:${APP_VERSION:-0.1.0}
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    environment: *env
+    volumes: ["media:/data"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, php, /app/bin/health.php]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+  nginx:
+    image: ske-nginx:${APP_VERSION:-0.1.0}
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    ports: ["127.0.0.1:${APP_PORT:-8095}:80"]
+    depends_on:
+      web: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1/health]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+  worker:
+    image: ske-worker:${APP_VERSION:-0.1.0}
+    build:
+      context: .
+      dockerfile: docker/python/Dockerfile
+    environment:
+      <<: *env
+      MODEL_PROFILE: ${MODEL_PROFILE:-astra}
+      MODEL_ENDPOINT: ${MODEL_ENDPOINT:-}
+      MODEL_ID: ${MODEL_ID:-}
+      MODEL_API_KEY: ${MODEL_API_KEY:-}
+      ALLOW_EXTERNAL_MODELS: ${ALLOW_EXTERNAL_MODELS:-0}
+      TRANSCRIPTION_MODEL: ${TRANSCRIPTION_MODEL:-small}
+      MAX_VIDEO_SECONDS: ${MAX_VIDEO_SECONDS:-7200}
+    volumes:
+      - media:/data
+      - model-cache:/home/app/.cache
+      - type: bind
+        source: ${TARGET_SOURCE:-./tests/fixtures/target}
+        target: /target
+        read_only: true
+        bind: {create_host_path: false}
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, /worker/service.py, --health]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+  scheduler:
+    image: ske-worker:${APP_VERSION:-0.1.0}
+    build:
+      context: .
+      dockerfile: docker/python/Dockerfile
+    environment: *env
+    command: [python, /worker/service.py, --scheduler]
+    depends_on:
+      redis: {condition: service_healthy}
+      postgres: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, /worker/service.py, --health-scheduler]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+volumes:
+  database:
+  queue:
+  media:
+  model-cache:
