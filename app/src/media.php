@@ -92,6 +92,7 @@ if(preg_match('#^/api/runs/([a-f0-9]{32})/(cancel|resume)$#',$path,$m)&&$method=
         query("UPDATE runs SET status='queued',error=NULL,approved_at=NULL,updated_at=now() WHERE id=?",[$r['id']]);enqueue('pipeline',$r['project_id'],['run_id'=>$r['id']]);
     }audit('run.'.$m[2],$r['id']);db()->commit();json_response(['ok'=>true],202);
 }
+require __DIR__.'/outputs.php';
 require __DIR__.'/knowledge.php';
 if(preg_match('#^/api/runs/([a-f0-9]{32})/frames/([a-f0-9]{32})$#',$path,$m)&&$method==='GET'){
     $r=owned_run($m[1]);$frames=stage_result($r['id'],'frames')['frames']??[];$matches=array_values(array_filter($frames,fn($f)=>$f['id']===$m[2]));if(!$matches)json_response(['error'=>'Frame não encontrado.'],404);stream_file(run_output_path($r).'/frames/'.$m[2].'.jpg','image/jpeg');

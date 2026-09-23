@@ -72,3 +72,11 @@ Dentro de `videos/<id>/analises/vNNN--<id>/` ficam áudio WAV (quando disponíve
 A pasta contém resultados de trabalho, incluindo itens ainda não aprovados. A fila atualiza os metadados após processamento e revisões; a atualização pode aguardar a tarefa em andamento. Imagens e ZIPs têm uma única localização, sem cópias paralelas no volume de mídia. O web tem acesso somente de leitura. Outputs são ignorados pelo Git e devem integrar o backup juntamente com o banco e o volume dos originais.
 
 Para uma instalação existente: pare web/worker/scheduler, prepare a pasta com `bash scripts/prepare-outputs.sh`, aplique `php bin/migrate.php` em um container web temporário, execute `docker compose run --rm --no-deps worker python outputs.py --migrate` e recrie os serviços. A migração compara SHA-256 antes de remover os arquivos antigos e pode ser retomada. Para regenerar somente JSON/TXT/SRT, use `docker compose exec -T worker python outputs.py` com o worker ocioso.
+
+## Leitor de outputs no sistema
+
+Abra um projeto e clique em **Frames e textos · vN** no vídeo, ou abra a análise e selecione a aba **Frames e textos**. A galeria apresenta imagens ampliadas, miniaturas, tempo de captura, zoom, filtro de frames semelhantes, busca pelo OCR e o texto/fala associado ao instante. É possível baixar o frame e ouvir o áudio extraído quando disponível.
+
+Em **Textos**, escolha a transcrição, OCR, telas, análise, histórico ou snapshot aprovado. O leitor permite buscar termos, copiar o texto, alternar entre leitura e JSON original e baixar o arquivo. Arquivos de até 2 MB são exibidos integralmente; acima disso, a prévia indica o limite e mantém o download completo. **Atualizar outputs** consulta novamente os arquivos gerados pela fila.
+
+As rotas exigem sessão e propriedade do projeto, usam um catálogo permitido de documentos e verificam o caminho real do arquivo. O leitor trata todo o conteúdo como texto, sem executar HTML ou scripts. `tests/output_viewer.py` valida acesso, isolamento entre contas, catálogo, downloads, snapshot aprovado, SRT vazio, Range de áudio e rejeição de caminhos arbitrários.

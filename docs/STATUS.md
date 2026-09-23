@@ -68,3 +68,11 @@ Não interpretar a presença dos arquivos de saída como conclusão das funciona
 - Snapshots e ZIPs ficam junto à análise; inventários pertencem à pasta do projeto. O nome físico da pasta é estável, e os metadados acompanham renomeações.
 - Dados existentes migrados com comparação SHA-256 antes da remoção dos arquivos antigos. Outputs excluídos do Git e do contexto Docker; acesso do web somente leitura.
 - `tests/media.py`, `tests/knowledge.py` e `tests/transcription.py` passaram novamente. `tests/outputs.py` verificou atualização após edição, separação de projetos com nomes iguais, renomeação, áudio, frames ocultados, streaming, ZIPs e inventários.
+
+## Interface de outputs — 23/09/2026
+
+- Aba **Frames e textos**, com acesso direto pelos cartões de vídeo/versão.
+- Galeria com zoom, miniaturas, navegação, filtros, OCR/fala por frame e download; reprodução opcional do áudio extraído.
+- Leitor de TXT/SRT/JSON com busca destacada, cópia, download e apresentação legível de transcrição, OCR, telas e conclusões.
+- Catálogo autenticado e restrito à análise do proprietário. Prévia textual limitada a 2 MB; nenhum HTML dos outputs é interpretado.
+- `tests/output_viewer.py` passou. Verificação no navegador confirmou galeria, filtros, navegação, zoom, leitura/original, transcrição e busca de termos, sem erros JavaScript registrados.

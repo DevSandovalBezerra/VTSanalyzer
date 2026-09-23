@@ -9,7 +9,7 @@ $path=parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH);
 $method=$_SERVER['REQUEST_METHOD'];
 try {
     if ($path==='/health') { db()->query('SELECT 1'); queue()->ping(); json_response(['status'=>'ok','version'=>getenv('APP_VERSION')]); }
-    if (in_array($path,['/assets/app.js','/assets/app.css','/assets/media.js','/assets/knowledge.js'],true)) { header('Content-Type: '.(str_ends_with($path,'.js')?'text/javascript':'text/css').'; charset=utf-8'); readfile('/frontend/'.basename($path)); exit; }
+    if (in_array($path,['/assets/app.js','/assets/app.css','/assets/media.js','/assets/knowledge.js','/assets/outputs.js','/assets/outputs.css'],true)) { header('Content-Type: '.(str_ends_with($path,'.js')?'text/javascript':'text/css').'; charset=utf-8'); readfile('/frontend/'.basename($path)); exit; }
     $_SESSION['csrf']??=bin2hex(random_bytes(32));
     if ($method!=='GET' && !hash_equals($_SESSION['csrf'],$_SERVER['HTTP_X_CSRF_TOKEN']??'')) json_response(['error'=>'Sessão expirada. Recarregue a página.'],419);
     if ($path==='/api/session') json_response(['user'=>$_SESSION['user']??null,'csrf'=>$_SESSION['csrf']]);
