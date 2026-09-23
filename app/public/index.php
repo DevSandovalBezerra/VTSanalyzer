@@ -13,11 +13,12 @@ try {
     $_SESSION['csrf']??=bin2hex(random_bytes(32));
     if ($method!=='GET' && !hash_equals($_SESSION['csrf'],$_SERVER['HTTP_X_CSRF_TOKEN']??'')) json_response(['error'=>'Sessão expirada. Recarregue a página.'],419);
     if ($path==='/api/session') json_response(['user'=>$_SESSION['user']??null,'csrf'=>$_SESSION['csrf']]);
+    require __DIR__.'/../src/register.php';
     if ($path==='/api/login' && $method==='POST') {
         $v=input(); $email=strtolower(trim((string)($v['email']??''))); $r=queue(); $key='login:'.hash('sha256',($_SERVER['REMOTE_ADDR']??'').$email);
         if ((int)$r->get($key)>=10) json_response(['error'=>'Muitas tentativas. Aguarde 15 minutos.'],429);
         $user=query('SELECT * FROM users WHERE email=?',[$email])->fetch(PDO::FETCH_ASSOC);
-        if (!$user||!password_verify((string)($v['password']??''),$user['password_hash'])) { $r->incr($key); $r->expire($key,900); json_response(['error'=>'E-mail ou senha inválidos.'],401); }
+        if (!$user||!password_verify((string)($v['password']??''),$user['password_hash'])) { $r->incr($key); $r->expire($key,900); json_response(['error'=>'Usuário/e-mail ou senha inválidos.'],401); }
         $r->del($key); session_regenerate_id(true); $_SESSION['csrf']=bin2hex(random_bytes(32)); $_SESSION['user']=['id'=>$user['id'],'email'=>$user['email'],'role'=>$user['role']]; audit('login'); json_response(['user'=>$_SESSION['user'],'csrf'=>$_SESSION['csrf']]);
     }
     if (str_starts_with($path,'/api/')) {

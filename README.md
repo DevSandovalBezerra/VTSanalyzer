@@ -80,3 +80,9 @@ Abra um projeto e clique em **Frames e textos · vN** no vídeo, ou abra a anál
 Em **Textos**, escolha a transcrição, OCR, telas, análise, histórico ou snapshot aprovado. O leitor permite buscar termos, copiar o texto, alternar entre leitura e JSON original e baixar o arquivo. Arquivos de até 2 MB são exibidos integralmente; acima disso, a prévia indica o limite e mantém o download completo. **Atualizar outputs** consulta novamente os arquivos gerados pela fila.
 
 As rotas exigem sessão e propriedade do projeto, usam um catálogo permitido de documentos e verificam o caminho real do arquivo. O leitor trata todo o conteúdo como texto, sem executar HTML ou scripts. `tests/output_viewer.py` valida acesso, isolamento entre contas, catálogo, downloads, snapshot aprovado, SRT vazio, Range de áudio e rejeição de caminhos arbitrários.
+
+## Cadastro livre
+
+Na tela de entrada, clique em **Registrar**. Escolha um usuário simples (3–40 letras sem acentos, números, ponto, traço ou sublinhado) ou e-mail, uma senha de pelo menos 6 caracteres e confirme a senha. Não há exigência de símbolos, convite, aprovação administrativa ou confirmação por e-mail. Após criar a conta, a entrada é automática.
+
+Novas contas recebem o papel `user` explicitamente. O login é normalizado para minúsculas e permanece no campo `email` existente por compatibilidade com as contas antigas. Senhas continuam armazenadas como hash; cada conta acessa apenas seus próprios projetos. Contas e senhas anteriores continuam funcionando.

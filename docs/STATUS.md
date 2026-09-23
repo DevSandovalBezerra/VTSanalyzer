@@ -76,3 +76,11 @@ Não interpretar a presença dos arquivos de saída como conclusão das funciona
 - Leitor de TXT/SRT/JSON com busca destacada, cópia, download e apresentação legível de transcrição, OCR, telas e conclusões.
 - Catálogo autenticado e restrito à análise do proprietário. Prévia textual limitada a 2 MB; nenhum HTML dos outputs é interpretado.
 - `tests/output_viewer.py` passou. Verificação no navegador confirmou galeria, filtros, navegação, zoom, leitura/original, transcrição e busca de termos, sem erros JavaScript registrados.
+
+## Cadastro livre — 23/09/2026
+
+- Botão **Registrar** na entrada, com usuário simples ou e-mail, senha a partir de 6 caracteres, confirmação e opção de mostrar/ocultar senha.
+- Sem convite, aprovação administrativa ou verificação de e-mail. A criação inicia a sessão automaticamente e usa explicitamente o papel `user`.
+- Login sem distinção entre maiúsculas/minúsculas, bloqueio de duplicidades inclusive por concorrência, hash Argon2id, CSRF e isolamento de projetos preservados.
+- `tests/registration.py` passou: validação, senha simples, confirmação, duplicidade, sessão, papel comum mesmo com tentativa de enviar admin, hash, acesso antigo e isolamento.
+- Tela de entrada e formulário de cadastro conferidos visualmente no navegador.
