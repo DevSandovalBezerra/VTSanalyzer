@@ -1,5 +1,7 @@
 .git
 .env
+.local-access.txt
+.ske-managed
 storage
 node_modules
 **/__pycache__

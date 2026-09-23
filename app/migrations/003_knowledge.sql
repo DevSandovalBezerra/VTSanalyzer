@@ -1,0 +1,3 @@
+CREATE TABLE snapshots (id text PRIMARY KEY, run_id text NOT NULL REFERENCES runs(id), payload jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE artifacts (id text PRIMARY KEY, run_id text NOT NULL REFERENCES runs(id), snapshot_id text NOT NULL REFERENCES snapshots(id), status text NOT NULL DEFAULT 'queued', error text, filename text, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE target_inventories (id text PRIMARY KEY, project_id text NOT NULL REFERENCES projects(id), status text NOT NULL DEFAULT 'queued', result jsonb, error text, created_at timestamptz NOT NULL DEFAULT now());

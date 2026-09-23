@@ -1,4 +1,5 @@
 const root=document.querySelector('#app');
+window.addEventListener('unhandledrejection',event=>{event.preventDefault();toast(event.reason?.message||'A conexão foi interrompida. Tente novamente.');});
 let csrf='', user=null, projects=[], current=null, page='projects', timer;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=s=>new Date(s).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});

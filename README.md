@@ -24,6 +24,18 @@ O código PHP, Python e frontend é montado em leitura no desenvolvimento. Alter
 
 ## Operação
 
+Depois de entrar, crie um projeto, envie o vídeo e aguarde a validação técnica. Abra **Nova análise**, escolha o perfil e acompanhe o monitor. Em **Revisão sincronizada**, selecione frames e falas; em **Conhecimento e exportação**, registre conclusões, indique evidências e revise cada item. Feche a revisão para congelar a versão e gerar o ZIP.
+
+Antes de processar vídeos com áudio, instale os pesos de transcrição:
+
+```bash
+bash scripts/download-model.sh
+```
+
+Esse comando baixa o modelo público configurado para um volume persistente. Depois, a transcrição usa `local_files_only=True`, sem enviar áudio. Vídeos sem áudio registram explicitamente essa condição. O diagnóstico verifica o cache; a aplicação bloqueia vídeos com áudio enquanto o modelo estiver ausente.
+
+O vídeo original é preservado. Regiões ocultadas são removidas das imagens derivadas e dos pacotes subsequentes dessa versão; o original continua acessível ao proprietário. A exportação é privada/local, não é publicação pública. Só as evidências citadas por conclusões aprovadas entram no ZIP. As inferências permanecem classificadas como inferências mesmo depois da aprovação.
+
 ```bash
 docker compose ps
 docker compose logs --tail=80 worker scheduler
@@ -45,4 +57,6 @@ O usuário decidiu definir o acesso posteriormente. `MODEL_PROFILE=astra` é um 
 
 ## Verificações
 
-`tests/foundation.py` exercita autenticação, CSRF, isolamento entre contas, versionamento de projetos, fila real e diagnóstico. `scripts/verify-foundation.sh` verifica persistência após recriação, bind mounts, FFmpeg e alvo somente leitura. Consulte `docs/STATUS.md` para o escopo realmente validado.
+`tests/foundation.py` exercita autenticação, CSRF, isolamento entre contas, versionamento de projetos, fila real e diagnóstico. `scripts/verify-foundation.sh` verifica persistência após recriação, bind mounts, FFmpeg e alvo somente leitura. `tests/media.py` e `tests/knowledge.py` exercitam o fluxo com mídia sintética, ocultação e pacote final. `tests/transcription.py` testa narração sintética em português contra o Whisper local. Consulte `docs/STATUS.md` para o escopo realmente validado e as pendências do PRD.
+
+Os scripts `checkpoint.sh`, `media-checkpoint.sh`, `validate.sh` e `prepare-model.sh` foram usados na instalação inicial a partir do pacote Windows. Eles copiam arquivos para o repositório WSL. **Não os reaplique sobre trabalho posterior no WSL.** Para continuar o desenvolvimento, edite diretamente o repositório Linux e execute os testes ali.

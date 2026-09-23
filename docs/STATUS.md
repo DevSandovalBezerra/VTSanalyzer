@@ -2,7 +2,7 @@
 
 Fonte: PRD 0.2 de 23/09/2026. Este arquivo descreve evidências reais, sem equivaler scaffold a requisito concluído.
 
-## Fundação em validação
+## Fundação validada em 23/09/2026
 
 - PHP 8.3, Python 3.12, PostgreSQL 17, Redis 7.4, Nginx e scheduler.
 - Docker Compose de desenvolvimento e imagens com código para produção.
@@ -18,6 +18,45 @@ Fonte: PRD 0.2 de 23/09/2026. Este arquivo descreve evidências reais, sem equiv
 - Astra preparado, mas inativo por decisão explícita do usuário. Não presumir credenciais nem usar a sessão do Codex como API.
 - Arquivos do projeto-alvo não serão executados.
 
-## Critérios ainda não concluídos
+Os seis serviços ficaram saudáveis. O teste recriou todos os containers e comprovou a persistência de PostgreSQL, Redis e mídia, os bind mounts PHP/Python e a recusa de escrita em `/target`. Commit inicial da fundação: `12bb1be`.
 
-As fases de mídia, revisão multimodal, conhecimento, comparação, exportação e robustez continuam dependentes da validação da fundação. Os cenários CA-01 a CA-06 não devem ser declarados aprovados sem seus testes integrados.
+## Fluxo local implementado
+
+- Upload de MP4/MOV/MKV/WebM em blocos de 8 MiB, retomada com validação de SHA-256 e envio idempotente.
+- Validação real de contêiner, duração, resolução e decodificação inicial usando FFprobe/FFmpeg, no worker.
+- Perfis rápido/equilibrado/detalhado, extração de áudio, adaptador local faster-whisper, frames periódicos e por cena, timestamps reais, deduplicação e OCR Tesseract com coordenadas.
+- Pré-verificação do worker, motores, espaço de disco e modelo de transcrição em cache.
+- Monitor com polling, cancelamento e retomada por etapa; resultados anteriores válidos permanecem intactos.
+- Player com HTTP Range, seleção de frame/fala, pesquisa de OCR/transcrição e edição de fala com histórico.
+- Ocultação de regiões em imagens derivadas; invalidação do OCR e das aprovações; proteção contra recaptura que restauraria pixels na mesma versão.
+- Registro e revisão manual de telas, regras, eventos, fluxos descritivos, entidades, padrões, conceitos e lacunas. Classificação e evidências obrigatórias.
+- Aprovação bloqueada por pendências; snapshot imutável para exportação.
+- Inventário textual do projeto-alvo montado em leitura; exclusão de dependências, arquivos de segredo, binários e symlinks. Nenhum código-alvo é executado.
+- ZIP autocontido com Markdown, JSON, YAML 1.2 (subconjunto JSON), Mermaid básico, evidências citadas por itens aprovados, contexto para Codex e manifesto de hashes.
+- Gateway neutro com contrato validado, prompt versionado e bloqueio explícito de chamadas externas.
+
+## Evidências de teste
+
+- `tests/foundation.py`: autenticação, CSRF, isolamento entre contas, projetos versionados, fila real, FFmpeg, OCR e logout — passou.
+- `scripts/verify-foundation.sh`: persistência após recriação de todos os containers, montagem de código e alvo somente leitura — passou.
+- `tests/media.py`: arquivo MP4 sintético real, upload/retomada/idempotência, metadados, pipeline, timestamps, reexecução de OCR sem refazer frames/áudio e streaming parcial — passou.
+- `tests/knowledge.py`: evidência inválida rejeitada, revisão obrigatória, pixels pretos no frame do ZIP, reaprovação após ocultação, imutabilidade do snapshot, hashes do pacote e inventário somente leitura — passou.
+- `tests/test_gateway.py`: cinco testes do contrato, incluindo NaN, evidência inexistente, classificação ausente, bloqueio de aprovação pelo modelo e integração desativada — passaram.
+- `tests/transcription.py`: narração sintética em português, sem dados do usuário; motor CPU real, timestamps e histórico de correções — passou. O texto reconhecido contém integralmente a demonstração do cadastro de clientes e o comando de salvar.
+- `tests/sessions.py`: a sessão autenticada sobrevive à recriação do container PHP usando armazenamento Redis — passou. O modelo Whisper também carregou com `local_files_only=True`.
+
+## Limites desta entrega e próximas fases
+
+O PRD completo **ainda não está concluído**. A entrega é uma primeira implementação funcional local, não a aprovação integral dos 128 RFs e 30 RNFs.
+
+- Astra: adaptador preparado, deliberadamente inativo. Análise multimodal, regras automáticas, contradições, comparação semântica e recomendações automáticas dependem de definir e integrar o provedor.
+- O comparador atual fornece inventário seguro e revisão manual; não produz uma matriz automática de equivalência funcional. Importação ZIP/Git não foi implementada; a integração disponível é a pasta autorizada.
+- O editor atual registra fluxos como conclusões descritivas. Editor visual de nós/arestas, eventos estruturados com transições, união/divisão de telas e restauração de revisões permanecem pendentes.
+- O plano exportado é um roteiro explícito de revisão; não inventa estimativas ou dependências específicas do código. Mermaid contém os fluxos aprovados como nós independentes.
+- Papéis granulares, colaboração, retenção/exclusão administrada, backup/restauração automatizados, métricas de produção e migrações reversas ainda precisam da fase de robustez.
+- CPU foi o ambiente exercitado. A configuração GPU é opt-in e requer imagem CUDA/drivers compatíveis e validação própria.
+- O frontend inicial usa JavaScript nativo e CSS local. Tailwind permanece uma recomendação a incorporar se for adotado um build frontend.
+- A captura está limitada a 600 frames por método por execução; vídeos longos exigem ampliar o intervalo. Não foi comprovado o desempenho para vídeos de duas horas.
+- CA-01/CA-02/CA-05 completos dependem da análise semântica futura. CA-03/CA-04/CA-06 tiveram seus mecanismos locais exercitados, mas não constituem avaliação de qualidade com vídeos reais de domínio.
+
+Não interpretar a presença dos arquivos de saída como conclusão das funcionalidades semânticas que dependem do Astra.

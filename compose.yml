@@ -10,6 +10,7 @@ x-env: &env
   REDIS_HOST: redis
   REDIS_PASSWORD: ${REDIS_PASSWORD:?Configure .env}
   STORAGE_PATH: /data
+  MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-4294967296}
 services:
   postgres:
     image: postgres:17-alpine
@@ -79,6 +80,9 @@ services:
       MODEL_API_KEY: ${MODEL_API_KEY:-}
       ALLOW_EXTERNAL_MODELS: ${ALLOW_EXTERNAL_MODELS:-0}
       TRANSCRIPTION_MODEL: ${TRANSCRIPTION_MODEL:-small}
+      HF_HOME: /home/app/.cache/huggingface
+      XDG_CACHE_HOME: /home/app/.cache
+      HF_HUB_DISABLE_TELEMETRY: "1"
       MAX_VIDEO_SECONDS: ${MAX_VIDEO_SECONDS:-7200}
     volumes:
       - media:/data
