@@ -36,6 +36,7 @@ O GitHub contém código, documentação e fixtures sintéticas. Vídeos reais, 
 
 ## Documentação
 
+- [Guia de uso](docs/GUIA-DE-USO.md): enviar, processar, iniciar a IA e encontrar o relatório.
 - [summary.md](summary.md): contexto rápido para retomar o trabalho.
 - [Planos e status](docs/PLANOS.md): entregas concluídas, pendências e critérios de aceite.
 - [Histórico de validações](docs/STATUS.md): evidências por data.

@@ -8,13 +8,13 @@ A branch de trabalho é `main`; o remoto solicitado é `https://github.com/DevSa
 
 ## Ciclo de alteração
 
-PHP, JS e CSS usam bind mounts no desenvolvimento: recarregar a página aplica mudanças. O worker mantém módulos Python carregados; antes de reiniciá-lo, aguarde tarefas em execução terminarem. Depois de mudanças Python:
+O código web PHP, JS e CSS usa bind mounts no desenvolvimento: novas requisições e o recarregamento da página aplicam as mudanças. O processo PHP `gemini-worker` é persistente e exige reinício após alterações no motor da geração. O worker mantém módulos Python carregados; antes de reiniciá-lo, aguarde tarefas em execução terminarem. Depois de mudanças Python:
 
 ```bash
-docker compose restart worker scheduler
+docker compose -f compose.yml -f compose.dev.yml restart worker scheduler
 ```
 
-Dependências e Dockerfiles exigem reconstrução das imagens. Migrações incrementais ficam em `app/migrations/`; o web as aplica ao iniciar. Em uma instalação já ativa, aplique com `docker compose exec -T web php bin/migrate.php` antes de testar as novas rotas. Não há migrações reversas implementadas.
+Para alterações nas funções PHP da geração, use `docker compose -f compose.yml -f compose.dev.yml restart gemini-worker` somente com tarefas ociosas. Reiniciar no meio de uma análise a marca como falha; não há retomada de lotes. Dependências e Dockerfiles exigem reconstrução das imagens. Migrações incrementais ficam em `app/migrations/`; o web as aplica ao iniciar. Em uma instalação já ativa, aplique com `docker compose exec -T web php bin/migrate.php` antes de testar as novas rotas. Não há migrações reversas implementadas.
 
 ## Convenções de produto
 

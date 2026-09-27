@@ -11,9 +11,9 @@ Sistema interno para destrinchar vídeos e tornar transcrição, telas e anális
 - Código canônico: `/home/user/projetos/system-knowledge-extractor`, Ubuntu-24.04/WSL2.
 - Pasta Windows `C:\wamp64\www\VTSAnalizer`: entrega/abertura, sem servidor da aplicação.
 - URL local: `http://localhost:8095`.
-- Docker Compose: Nginx, PHP 8.3, PostgreSQL 17, Redis 7.4, worker e scheduler Python 3.12.
+- Docker Compose: Nginx, PHP 8.3, PostgreSQL 17, Redis 7.4, worker/scheduler Python 3.12 e processador Gemini PHP.
 - Branch main; destino: `https://github.com/DevSandovalBezerra/VTSanalyzer.git`.
-- PHP/JS/CSS são montados no desenvolvimento. Após alteração Python, reiniciar worker/scheduler quando estiverem ociosos.
+- Fontes são montados no desenvolvimento. Reiniciar worker/scheduler após mudanças Python e `gemini-worker` após mudanças nas funções PHP da geração, sempre com tarefas ociosas. Reinício do Gemini não retoma lotes parciais.
 
 ## Entregue
 
@@ -41,6 +41,6 @@ Originais e segredo mestre Gemini ficam no volume media; derivados em outputs; b
 
 ## Publicação e memória
 
-Aplicação e documentação publicadas na main em 27/09/2026; primeiro commit `607b037`, confirmado no GitHub. Os planos P08/P09 registram a entrega e a etapa restante no cliente.
+Aplicação publicada na main em 27/09/2026; primeiro commit `607b037`. A correção Gemini `fd93cc0` foi confirmada no GitHub. A revisão documental posterior alinha arquitetura, API, instalação, configuração, operação e [guia de uso](docs/GUIA-DE-USO.md) a essa implementação. Os planos P08/P09 registram a entrega e a etapa restante no cliente.
 
 ai-memory 2.0.3 funciona no WSL em localhost:49374, com contexto gravado e busca validada. O MCP respondeu ao handshake e os hooks sintéticos persistiram três eventos. LLM e embeddings externos estão desativados. Abrir nova sessão/recarregar MCP e revisar a confiança dos hooks, quando solicitado, para ativar o uso automático no cliente.

@@ -19,9 +19,10 @@ chmod 600 .env
 docker compose build worker
 bash scripts/prepare-outputs.sh
 docker compose -f compose.yml -f compose.dev.yml up -d --build --wait
-docker compose exec -T web php bin/migrate.php
 bash scripts/download-model.sh
 ```
+
+O serviço web aplica as migrações automaticamente ao iniciar.
 
 Abra [localhost:8095](http://localhost:8095), clique em **Registrar** e crie sua conta. Usuário simples tem 3–40 caracteres; a senha admite 6 ou mais caracteres. O script administrativo `app/bin/create-user.php` é uma alternativa de operação e exige senha maior; o cadastro pelo navegador não depende dele.
 
@@ -29,7 +30,9 @@ Abra [localhost:8095](http://localhost:8095), clique em **Registrar** e crie sua
 
 Crie um projeto com nome, envie o arquivo e aguarde sua validação. Título vazio usa o nome do arquivo. Objetivo, origem e contexto são opcionais; os detalhes de captura ficam recolhidos. Inicie a análise após a mídia estar pronta.
 
-Na central **Outputs**, veja o progresso e abra **Transcrição** ou **Telas principais** quando liberados. Transcrição oferece TXT, SRT e JSON. Telas associa imagens, OCR e falas do trecho. **Análise por IA** abre a configuração Gemini, cujo prompt ainda está em revisão.
+Na central **Outputs**, veja o progresso e abra **Transcrição** ou **Telas principais** quando liberados. Transcrição oferece TXT, SRT e JSON. Telas associa imagens, OCR e falas do trecho.
+
+Para gerar o relatório, abra **Configurar Gemini** no menu lateral, salve sua chave, teste a conexão e confira o modelo selecionado. O prompt-base está pronto; sua edição é opcional. Em **Outputs → Análise por IA**, escolha o vídeo processado e clique em **Iniciar análise com Gemini**. A mesma tela acompanha as partes e, ao terminar, mostra **Relatório pronto**, com leitura, cópia e download. A configuração é por conta e fica separada da consulta de resultados. Veja o [guia de uso](GUIA-DE-USO.md).
 
 ## Instalação existente
 

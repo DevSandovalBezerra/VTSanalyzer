@@ -30,13 +30,13 @@ Chave criptografada por conta, teste/listagem de modelos e editor avançado do p
 
 O pedido congela prompt e versões das evidências; as imagens usadas são copiadas temporariamente para impedir mistura de revisões; `gemini-worker` processa em segundo plano com chave criptografada por conta. Montagem com transcrição, OCR, imagens selecionadas e metadados; medição `countTokens`, divisão de lotes e consolidação; estados de fila/execução/falha/cancelamento; relatório persistido em Markdown, lido na análise do vídeo e em Outputs. O fluxo da interface separa configuração global de início, acompanhamento e leitura do resultado por vídeo. Referências desconhecidas geram avisos. O web aplica migrações antes de ficar pronto.
 
-**Verificado:** `gemini_execution` com vídeo sintético e provedor simulado, além de `gemini_settings`, sintaxe e acesso à configuração. Nenhum dado foi enviado ao Google nos testes.
+**Verificado:** `gemini_execution` com vídeo sintético e provedor simulado, além de `gemini_settings`, sintaxe e acesso à configuração. Nenhum dado foi enviado ao Google nesses testes automatizados; a validação manual real está descrita abaixo.
 
 **Validação real em 27/09:** o modelo salvo `gemini-2.5-flash` aparecia no catálogo, mas a chamada mínima retornou HTTP 404 por indisponibilidade para esta chave. O teste de conexão passou a verificar `countTokens` antes de selecionar/salvar modelos, escolhendo `gemini-3.8-flash`. Foram conferidos 382 segmentos de fala e 87 telas em 9 lotes; o tamanho do material não causou a recusa. A primeira execução corrigida encontrou HTTP 503 transitório em 5/10; a política de até cinco tentativas com espera exponencial resolveu esse caso. A execução seguinte terminou em 10/10, com relatório persistido e visível no Chrome. Dez horários citados no relatório não constam nas evidências e foram sinalizados. **Pendente para aceite integral:** revisão humana da precisão, cobertura e referências do relatório; avaliação de custo/cotas e de mais vídeos.
 
 ## P08 — Documentação e publicação · CONCLUÍDO
 
-README, arquitetura, instalação, configuração, API, testes, operação, planos e summary preparados a partir do código. Código e docs publicados na main do GitHub informado, sem dados de trabalho. Primeiro commit de publicação: `607b037`; hash remoto conferido em 27/09/2026.
+README, arquitetura, instalação, configuração, API, testes, operação, planos e summary preparados a partir do código. Código e docs publicados na main do GitHub informado, sem dados de trabalho. Primeiro commit de publicação: `607b037`; correção Gemini `fd93cc0`, com hash remoto conferido em 27/09/2026. A revisão documental posterior atualiza o guia de uso, a arquitetura do processador Gemini, os contratos de modelo/prompt e a operação com falhas e reinícios.
 
 **Aceite verificado:** links locais válidos, diferenças revisadas, commit criado e hash remoto igual ao local. Varredura de assinaturas de credenciais passou nos arquivos de trabalho e no histórico.
 
@@ -50,7 +50,7 @@ ai-memory 2.0.3 instalado no WSL, com instalação anterior Windows preservada, 
 
 ## P10 — Evolução posterior · BACKLOG
 
-Comparação semântica com código-alvo; importação ZIP/Git; editor visual de fluxos; transições estruturadas; união/divisão de telas; restauração de revisões; papéis e colaboração; políticas de exclusão; backup/restauração; métricas, carga, GPU e vídeos longos. Não iniciar tudo automaticamente: priorizar depois da análise Gemini funcional.
+Comparação semântica com código-alvo; importação ZIP/Git; editor visual de fluxos; transições estruturadas; união/divisão de telas; restauração de revisões; papéis e colaboração; políticas de exclusão; backup/restauração; métricas, carga, GPU e vídeos longos. A geração Gemini já funciona com vídeo real; as próximas prioridades são revisar qualidade/referências e avaliar custo/cotas antes de escolher os demais itens do backlog.
 
 ## Decisões vigentes
 

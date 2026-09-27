@@ -156,3 +156,11 @@ Validação da configuração Gemini: `tests/gemini_settings.py` passou com chav
 - Material: 382 trechos de transcrição e 87 telas selecionadas, organizados em 9 lotes de 442–720 KB de JSON; vídeo e áudio originais não foram enviados. Esse tamanho não foi a causa da falha inicial.
 - A execução com o novo modelo chegou a 5/10 e falhou com HTTP 503. Foi acrescentada repetição limitada, com espera exponencial e variação aleatória, para timeout/408/429/5xx transitórios. Logs registram somente ação, modelo, HTTP e tentativa.
 - Nova execução do mesmo vídeo concluiu 10/10, gravou Markdown em Outputs e banco e abriu o relatório no Chrome. A repetição por HTTP 503 ocorreu e a tarefa prosseguiu. Dez referências de horário não presentes nas evidências foram sinalizadas; ainda requerem revisão humana. Chave, conteúdo e outputs privados não foram registrados no Git.
+
+## Consolidação da documentação do sistema — 27/09/2026
+
+- Guias técnicos confrontados com a implementação `fd93cc0`: removidas descrições antigas de geração bloqueada, prompt pendente e salvamento conjunto de modelo/prompt.
+- Arquitetura inclui o processador Gemini PHP e sua fila PostgreSQL; instalação e guia de uso descrevem configuração global, início por vídeo, progresso e relatório como conclusão do percurso.
+- API documenta a rota independente de modelo, a verificação mínima de acesso, estados e erros assíncronos. Operação descreve reinício, fila, ausência de retomada de lotes e cancelamento cooperativo.
+- Parâmetros de montagem/tentativas e a diferença entre sucesso técnico e revisão factual constam nos guias. Testes anteriores permanecem identificados como evidências históricas.
+- Atualização restrita a Markdown; sem nova geração Gemini ou alteração dos dados dos vídeos. Validação: 17 documentos e 37 links relativos conferidos, blocos de código fechados e `git diff --check` sem erros.

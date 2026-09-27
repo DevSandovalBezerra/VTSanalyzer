@@ -27,3 +27,20 @@ Em desenvolvimento, inicie com `docker compose -f compose.yml -f compose.dev.yml
 - [Geração de conteúdo e respostas](https://ai.google.dev/api/generate-content)
 - [Contagem de tokens](https://ai.google.dev/api/tokens)
 - [Imagens inline na API generateContent](https://ai.google.dev/gemini-api/docs/generate-content/image-understanding)
+
+## Diagnóstico por mensagem
+
+- **HTTP 404 / modelo indisponível:** abra Configurar Gemini e teste a conexão. A aplicação tenta manter o modelo salvo; se ele não responder ao teste mínimo, procura uma alternativa do catálogo. Conferir apenas a presença na lista não comprova acesso.
+- **HTTP 401/403:** confira a chave e as permissões no Google AI Studio; cadastre/teste a chave pela interface.
+- **HTTP 429:** após esgotar as tentativas automáticas, confira cota e acesso da conta antes de iniciar outra execução.
+- **HTTP 503 e outros 5xx transitórios:** o processador repete a chamada automaticamente. Se a tarefa terminar em falha, use Tentar novamente; essa ação cria uma análise desde o início.
+- **HTTP 400/413 ou limite de saída:** o erro distingue formato, tamanho e resposta interrompida. A montagem pode exigir ajuste; nenhum relatório cortado por `MAX_TOKENS` é marcado como completo.
+- **Processador reiniciado:** aguarde o serviço voltar e inicie outra análise. Os lotes parciais não são recuperados após reinício.
+
+O teste de conexão usa `countTokens`, não uma geração completa: sucesso no teste não assegura cota nem disponibilidade durante todo o vídeo. A contagem de progresso representa os lotes iniciais concluídos mais a consolidação final; subdivisões por tokens e tentativas HTTP podem ocorrer dentro da mesma parte, sem avançar a barra.
+
+## Leitura e referências
+
+Ao concluir, a tela mostra o texto Markdown, permite copiar/baixar e recolhe a lista de avisos em um bloco expansível com a quantidade de referências a revisar. Esses avisos não significam falha no envio: indicam citações que o verificador não associou ao manifesto de evidências. A conferência é textual e limitada; não comprova nem refuta sozinha a interpretação do modelo.
+
+Uma nova execução aparece como a tarefa mais recente na tela do vídeo. Relatórios concluídos anteriores continuam no catálogo **Todos os arquivos** da mesma versão. Os resultados são específicos da versão local processada; mudar a configuração não reescreve relatórios existentes.

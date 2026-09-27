@@ -20,7 +20,7 @@ Referência: `.env.example` e `compose.yml`. Não colocar segredos reais em docu
 
 A chave Gemini é configurada pela interface e pertence à conta conectada. O banco guarda a chave criptografada; o segredo mestre fica em `/data/secrets/gemini-master.key`. Preserve ambos no backup.
 
-`MODEL_PROFILE=astra`, `MODEL_ENDPOINT`, `MODEL_ID`, `MODEL_API_KEY` e `ALLOW_EXTERNAL_MODELS=0` pertencem ao gateway legado. Não configuram o painel Gemini. A geração Gemini depende da chave cadastrada e testada pela própria conta na interface. O teste de conexão Gemini consulta a API de modelos quando o usuário clica em Testar. Não envia evidências.
+`MODEL_PROFILE=astra`, `MODEL_ENDPOINT`, `MODEL_ID`, `MODEL_API_KEY` e `ALLOW_EXTERNAL_MODELS=0` pertencem ao gateway legado. Não configuram o painel Gemini. A geração Gemini depende da chave cadastrada e testada pela própria conta na interface. O teste de conexão Gemini consulta o catálogo e verifica acesso com `countTokens` usando apenas texto mínimo. Não envia evidências do vídeo. A listagem pode conter modelos indisponíveis para a chave; a seleção é validada também ao salvar outro modelo.
 
 A configuração de ai-memory é independente: veja [AI-MEMORY.md](AI-MEMORY.md).
 
@@ -29,3 +29,16 @@ A configuração de ai-memory é independente: veja [AI-MEMORY.md](AI-MEMORY.md)
 `compose.yml` define os serviços, incluindo `gemini-worker`, e as imagens com código. O web aplica migrações ao iniciar; `gemini-worker` aguarda o web ficar saudável. `compose.dev.yml` monta fontes locais em leitura para desenvolvimento. `compose.gpu.yml` é uma opção experimental; aceleração GPU não foi validada.
 
 Alterações em variáveis exigem recriar os serviços para serem aplicadas. Mudanças em dependências ou Dockerfiles exigem rebuild. Nunca compartilhar a saída integral de `docker compose config` com segredos interpolados.
+
+## Parâmetros atuais da geração
+
+Modelo e prompt são configurações por conta, salvas separadamente em **Configurar Gemini**. Cada tarefa conserva uma cópia dessas escolhas. A preferência implementada começa em `gemini-3.8-flash` quando o modelo salvo não responde; um modelo existente que responda é mantido. A disponibilidade é conferida com a chave, não presumida pelo nome no catálogo.
+
+Os limites abaixo estão em `app/src/gemini_engine.php`, sem variáveis de ambiente próprias:
+
+- Formação inicial de lotes: até 10 imagens, 6 MiB de imagens e 60.000 bytes de texto acumulados antes de abrir outro lote. A contagem efetiva de tokens pode dividi-lo novamente.
+- Imagem selecionada: até 5 MiB; corpo JSON enviado: até 18 MiB. Esses são limites locais de montagem, não uma declaração dos limites comerciais do provedor.
+- Saída: até 16.384 tokens por chamada, limitada também pelo catálogo do modelo. Gemini 3 usa `thinkingLevel: low`; os demais IDs usam `temperature: 0.2`.
+- Timeout: conexão de até 10 segundos; até 45 segundos para `countTokens` e 240 segundos para `generateContent`, por tentativa. Erros transitórios têm até cinco tentativas, com esperas de 1, 2, 4 e 8 segundos mais até 0,5 segundo de variação aleatória.
+
+A repetição se aplica a `countTokens` e `generateContent`; a consulta inicial do catálogo tem tratamento próprio. Consulte [Gemini](GEMINI.md) para diagnóstico e [operação](DEPLOYMENT.md) antes de reiniciar o processador.

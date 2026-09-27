@@ -13,6 +13,7 @@ Referência do comportamento atual em `app/public/index.php` e `app/src/`, confe
 - 422: validação.
 - 429: limite de tentativas de autenticação/cadastro.
 - 500: mensagem genérica com referência, sem stack trace.
+- 502: falha no teste de conexão com o provedor Gemini.
 
 `GET /health` verifica banco e Redis; não autentica o usuário nem comprova sucesso do pipeline.
 
@@ -55,13 +56,18 @@ Referência do comportamento atual em `app/public/index.php` e `app/src/`, confe
 - `GET /api/ai/gemini`: configuração mascarada, catálogo e rascunho.
 - `POST /api/ai/gemini/key`: `api_key`; guarda criptografada e invalida validação/catalogação anterior.
 - `DELETE /api/ai/gemini/key`: remove a cópia local.
-- `POST /api/ai/gemini/test`: consulta modelos na API Google; não gera análise.
-- `PATCH /api/ai/gemini/draft`: salva prompt e modelo selecionado.
+- `POST /api/ai/gemini/test`: lista modelos e tenta `countTokens` com texto mínimo. Mantém o modelo salvo se ele responder; caso contrário, tenta os preferidos e depois o catálogo. Salva catálogo, modelo selecionado e data de validação. Não envia evidências do vídeo nem gera relatório.
+- `PATCH /api/ai/gemini/model`: corpo `{"model":"<id do catálogo>"}`; exige conexão testada e verifica `countTokens` antes de salvar. Não altera o prompt nem sua versão.
+- `PATCH /api/ai/gemini/draft`: corpo `{"prompt":"<texto>"}`; salva o prompt e incrementa `draft_version`. Campo `model` é rejeitado (422). O limite é 24.000 bytes; os seis marcadores de material são exigidos ao iniciar a análise.
 - `POST /api/runs/{id}/ai/gemini`: exige chave testada, modelo salvo e outputs locais prontos; cria tarefa (202). Rejeita outra tarefa ativa (409).
-- `GET /api/runs/{id}/ai/gemini`: estado, progresso, erro, avisos e relatório concluído.
+- `GET /api/runs/{id}/ai/gemini`: retorna a tarefa mais recente da versão, com `status`, `model`, `progress_done`, `progress_total`, `error`, `warnings` e `report`. Sem tarefa, retorna `{"status":"not_started"}`; `report` só é preenchido em `completed`.
 - `POST /api/runs/{id}/ai/gemini/{tarefa}/cancel`: cancela tarefa ativa (202).
 - `GET /api/runs/{id}/ai/gemini/{tarefa}/download`: baixa o relatório Markdown concluído.
 - Relatórios concluídos também entram no catálogo de outputs com chave `ai-{tarefa}`.
+
+Estados persistidos: `queued`, `processing`, `completed`, `failed` e `cancelled`. Existe no máximo uma tarefa ativa por versão local (`run_id`). Uma falha posterior à criação é registrada em `error`; consultar uma tarefa com `status=failed` continua retornando HTTP 200. O código HTTP do Google presente nessa mensagem é distinto do status da API local.
+
+O teste mínimo de acesso não garante disponibilidade nem cota para toda uma geração. Na execução, o serviço repete timeout e HTTP 408/429/500/502/503/504 até cinco tentativas no total. Cancelamento é cooperativo: pode aguardar uma chamada externa terminar. Nova tentativa após falha/cancelamento cria outra tarefa e reprocessa os lotes desde o começo.
 
 ## Operação
 
