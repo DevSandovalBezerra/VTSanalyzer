@@ -126,3 +126,6 @@ Validação da configuração Gemini: `tests/gemini_settings.py` passou com chav
 - PRD original preservado e identificado como escopo de referência. Histórico de testes separado das validações recentes; gateway Astra identificado como legado.
 - ai-memory 2.0.3 instalado no WSL, com serviço local, providers LLM/embedding desativados, marcador do projeto e instruções/skills oficiais. A instalação Windows anterior foi preservada.
 - MCP Windows conferido; hooks Windows ajustados para bridge WSL, com backup, sem alterar a confiança exigida pelo cliente. Captura automática em nova sessão aguarda ativação/revisão dos hooks pelo cliente.
+
+- Validação da memória: escrita/leitura no escopo do projeto, handshake MCP, catálogo de ferramentas e três eventos de sessão sintética persistidos; serviço acessível também pelo Windows. Nenhuma chamada LLM/embedding realizada.
+- Publicação inicial concluída em `DevSandovalBezerra/VTSanalyzer`, branch main, commit `607b037`. SHA remoto e local conferidos. Código e histórico examinados para assinaturas de credenciais; outputs, originais, banco e segredos não integram o repositório.

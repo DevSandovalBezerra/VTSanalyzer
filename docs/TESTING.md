@@ -35,3 +35,9 @@ As evidências de 23/09 estão em [STATUS.md](STATUS.md): fundação, persistên
 ## Ainda não validado
 
 Geração Gemini real, qualidade semântica com vídeos de referência, custo e limites de contexto; carga e vídeos de duas horas; GPU; restauração completa de backup; implantação pública de produção. A saúde dos containers não substitui esses testes.
+
+## Verificação da publicação e memória — 27/09
+
+Links Markdown locais e `git diff --check` passaram. A varredura de assinaturas comuns de credenciais encontrou zero candidatos em 97 blobs históricos e 95 arquivos de trabalho antes da publicação; não é garantia de detecção universal de segredos. Nenhum arquivo de runtime privado entrou no conjunto publicado.
+
+O bridge Windows/WSL foi verificado com caminhos de drive/UNC, campos aninhados e uma sequência sintética SessionStart/UserPromptSubmit/SessionEnd. O servidor persistiu os três eventos. Inicialização MCP e catálogo de ferramentas responderam. Escrita de contexto e busca por Gemini passaram; providers LLM e embedding reportaram disabled. A ativação de hooks confiáveis em nova sessão real do cliente permanece pendente.

@@ -38,3 +38,9 @@ Em 27/09 passaram practical_flow, progress, progress_ui e gemini_settings, além
 Originais e segredo mestre Gemini ficam no volume media; derivados em outputs; banco em volume PostgreSQL. Esses dados não vão ao GitHub. Não usar down -v para atualizar. Não reaplicar scripts históricos de cópia Windows sobre o checkout atual.
 
 [AI-MEMORY.md](docs/AI-MEMORY.md) registra a memória dos agentes. Ela é independente do analisador de vídeos. Documentação/código/testes atuais prevalecem sobre lembranças antigas.
+
+## Publicação e memória
+
+Aplicação e documentação publicadas na main em 27/09/2026; primeiro commit `607b037`, confirmado no GitHub. Os planos P08/P09 registram a entrega e a etapa restante no cliente.
+
+ai-memory 2.0.3 funciona no WSL em localhost:49374, com contexto gravado e busca validada. O MCP respondeu ao handshake e os hooks sintéticos persistiram três eventos. LLM e embeddings externos estão desativados. Abrir nova sessão/recarregar MCP e revisar a confiança dos hooks, quando solicitado, para ativar o uso automático no cliente.

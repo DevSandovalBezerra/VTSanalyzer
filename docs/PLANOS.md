@@ -40,17 +40,19 @@ Depende de P06 aprovado. Implementar:
 
 **Aceite:** executar com mídia autorizada; recuperar referências válidas; exibir limitações; testar falhas de autenticação, cota, timeout e retomada; demonstrar no navegador que o resultado vem do Gemini.
 
-## P08 — Documentação e publicação · EM FINALIZAÇÃO
+## P08 — Documentação e publicação · CONCLUÍDO
 
-README, arquitetura, instalação, configuração, API, testes, operação, planos e summary preparados a partir do código. Publicar código e docs na main do GitHub informado, sem dados de trabalho.
+README, arquitetura, instalação, configuração, API, testes, operação, planos e summary preparados a partir do código. Código e docs publicados na main do GitHub informado, sem dados de trabalho. Primeiro commit de publicação: `607b037`; hash remoto conferido em 27/09/2026.
 
-**Aceite:** links locais válidos, diferenças revisadas, commit criado e hash remoto igual ao local.
+**Aceite verificado:** links locais válidos, diferenças revisadas, commit criado e hash remoto igual ao local. Varredura de assinaturas de credenciais passou nos arquivos de trabalho e no histórico.
 
-## P09 — Contexto entre agentes · EM IMPLANTAÇÃO
+## P09 — Contexto entre agentes · INSTALADO; ATIVAÇÃO NO CLIENTE PENDENTE
 
-Instalar ai-memory da linha 2.0 no WSL, preservar instalação anterior Windows, registrar contexto e decisões, conectar o acesso pelo Codex e documentar operação.
+ai-memory 2.0.3 instalado no WSL, com instalação anterior Windows preservada, contexto inicial registrado, MCP conferido e operação documentada. LLM e embeddings externos desativados.
 
-**Aceite:** serviço acessível, versão confirmada, memória gravada/consultada e configuração dos agentes conferida. Limitações de captura no cliente devem ficar explícitas.
+**Aceite técnico verificado:** serviço acessível pelo Windows e WSL, versão confirmada, memória gravada/consultada, handshake MCP e sequência sintética de hooks com três eventos persistidos.
+
+**Pendente no cliente:** nova sessão/recarregamento do MCP e revisão/confiança dos hooks quando solicitada. Captura automática de uma sessão real futura ainda não foi comprovada. Instruções em [AI-MEMORY.md](AI-MEMORY.md).
 
 ## P10 — Evolução posterior · BACKLOG
 
