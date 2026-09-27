@@ -25,7 +25,7 @@ Fluxo simplificado: título por nome de arquivo, objetivo/origem/contexto opcion
 
 Configuração por conta, chave criptografada, consulta de modelos, rascunho editável e prévia do material implementados. Prompt em `app/prompts/gemini-analysis.md`.
 
-**O usuário ainda não aprovou o prompt. Não houve geração real nem envio de vídeo ao Gemini.** O endpoint de execução retorna 409. O próximo trabalho de produto é aprovar o prompt e implementar P07. Credenciais do Gemini devem ser inseridas pela interface; não pedir para colar chaves no chat.
+**O prompt-base foi revisado e fechado para implementação. Não houve geração real nem envio de vídeo ao Gemini.** O endpoint de execução retorna 409. O próximo trabalho de produto é implementar P07. Credenciais do Gemini devem ser inseridas pela interface; não pedir para colar chaves no chat.
 
 O gateway Astra em `worker/gateway.py` é legado e não chama o Gemini. Não usar sua existência como prova de análise por IA funcional.
 

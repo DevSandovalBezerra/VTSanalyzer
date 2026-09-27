@@ -2,7 +2,7 @@
 
 Aplicação interna para destrinchar vídeos: transcrição local, capturas de tela, OCR, revisão de evidências e exportação do conhecimento. A interface prioriza os **Outputs**, com acesso direto a **Transcrição**, **Telas principais** e **Análise por IA**.
 
-Estado em **27/09/2026**: processamento local e leitura de resultados funcionais. A configuração do Gemini está implementada; a execução da análise por IA aguarda aprovação do prompt e implementação do processamento externo. O PRD completo ainda não está concluído.
+Estado em **27/09/2026**: processamento local e leitura de resultados funcionais. A configuração e o prompt-base do Gemini estão definidos; a execução da análise por IA ainda precisa ser implementada. O PRD completo ainda não está concluído.
 
 ## Fluxo de uso
 
@@ -42,7 +42,7 @@ O GitHub contém código, documentação e fixtures sintéticas. Vídeos reais, 
 - [Histórico de validações](docs/STATUS.md): evidências por data.
 - [Arquitetura](docs/ARCHITECTURE.md), [configuração](docs/CONFIGURATION.md) e [API](docs/API.md).
 - [Instalação](docs/GETTING-STARTED.md), [desenvolvimento](docs/DEVELOPMENT.md), [testes](docs/TESTING.md) e [operação](docs/DEPLOYMENT.md).
-- [Gemini](docs/GEMINI.md) e [prompt em revisão](app/prompts/gemini-analysis.md).
+- [Gemini](docs/GEMINI.md) e [prompt-base definido](app/prompts/gemini-analysis.md).
 - [Memória para agentes](docs/AI-MEMORY.md).
 - [PRD original](docs/PRD.md): escopo de referência; não é um relatório de funcionalidades concluídas.
 - [Gateway legado](docs/GATEWAY.md): contrato inicial, ainda desconectado do pipeline.

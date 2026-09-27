@@ -129,3 +129,9 @@ Validação da configuração Gemini: `tests/gemini_settings.py` passou com chav
 
 - Validação da memória: escrita/leitura no escopo do projeto, handshake MCP, catálogo de ferramentas e três eventos de sessão sintética persistidos; serviço acessível também pelo Windows. Nenhuma chamada LLM/embedding realizada.
 - Publicação inicial concluída em `DevSandovalBezerra/VTSanalyzer`, branch main, commit `607b037`. SHA remoto e local conferidos. Código e histórico examinados para assinaturas de credenciais; outputs, originais, banco e segredos não integram o repositório.
+
+## Veredito sobre o prompt Gemini — 27/09/2026
+
+- A proposta revisada foi adotada como prompt-base para a implementação futura. Notas de montagem ficaram no documento de trabalho; somente o trecho PROMPT foi colocado em `app/prompts/gemini-analysis.md`.
+- Ajustes finais: segmentos com início/fim reais; cobertura completa/parcial explícita; OCR como fonte própria; ações entre imagens sem falsa observação; divisão segundo limites efetivos do modelo, com mapa de IDs e verificação de referências; dados escapados ao montar os blocos.
+- A interface e a API deixam claro que a geração ainda não existe. Nenhuma evidência é enviada ao Gemini nesta etapa. Rascunhos de usuários existentes são preservados.

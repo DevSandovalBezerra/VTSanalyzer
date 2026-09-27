@@ -22,15 +22,15 @@ Entrada em Outputs; atalhos de transcrição, telas e IA; busca/filtro; título 
 
 Etapas visíveis, acompanhamento automático, proteção contra navegação involuntária, resultados bloqueados até sincronização da versão correta e rejeição de início duplicado. Evidências: progress, progress_ui e navegador.
 
-## P06 — Gemini: configuração e prompt · IMPLEMENTADO; PROMPT EM APROVAÇÃO
+## P06 — Gemini: configuração e prompt · PROMPT-BASE FECHADO
 
-Chave criptografada por conta, teste/listagem de modelos, editor de rascunho e prévia do material. Evidência: gemini_settings com transporte simulado e navegador. A geração está bloqueada no servidor.
+Chave criptografada por conta, teste/listagem de modelos, editor de rascunho e prévia do material. Prompt-base revisado com referências, cobertura e tratamento distinto para imagem, OCR, fala e inferência. Evidência: gemini_settings com transporte simulado e navegador. A geração continua bloqueada no servidor.
 
-**Próximo passo:** revisar com o usuário o texto de `app/prompts/gemini-analysis.md`. Testar conexão com chave real fornecida na interface. Salvar um rascunho não equivale a aprová-lo.
+**Próximo passo:** implementar a montagem segura do material e a execução P07; testar conexão com chave real fornecida na interface. Rascunhos salvos por usuários permanecem independentes do prompt-base.
 
 ## P07 — Gemini: execução e resultados · PLANEJADO
 
-Depende de P06 aprovado. Implementar:
+Com o prompt-base definido, implementar:
 - congelamento da versão de prompt e evidências selecionadas;
 - contagem de contexto e divisão em lotes, sem truncamento silencioso;
 - chamada Gemini no servidor/fila, sem revelar a chave;

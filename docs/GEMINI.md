@@ -1,8 +1,8 @@
-# Gemini: configuração e prompt em revisão
+# Gemini: prompt-base definido, execução pendente
 
-Esta entrega permite salvar/remover uma chave por usuário, testar o acesso consultando os modelos oficiais e salvar um modelo e prompt como rascunho. Não executa análise nem transmite evidências do vídeo. A execução aguarda a aprovação conjunta do prompt e do material pelo usuário.
+Esta entrega permite salvar/remover uma chave por usuário, testar o acesso consultando os modelos oficiais e salvar um modelo e prompt por usuário como rascunho. O prompt-base foi revisado em 27/09/2026. A execução ainda não foi implementada: não gera análise nem transmite evidências do vídeo.
 
-O texto proposto está em `app/prompts/gemini-analysis.md` e aparece integralmente no editor Análise por IA. Salvar não aprova nem dispara tarefas. O endpoint de análise retorna 409 enquanto essa etapa estiver pendente.
+O texto proposto está em `app/prompts/gemini-analysis.md` e aparece integralmente no editor Análise por IA. Salvar não dispara tarefas. O endpoint de análise retorna 409 enquanto a execução não estiver implementada. Rascunhos já salvos por contas existentes não são substituídos automaticamente; o usuário pode restaurar o prompt-base no editor.
 
 ## Chaves
 
@@ -13,6 +13,19 @@ O botão de teste faz somente GET HTTPS para `generativelanguage.googleapis.com/
 ## Proposta de material
 
 Transcrição completa e OCR com timestamps, imagens de telas selecionadas e contexto do vídeo/projeto. O painel de uma análise mostra as quantidades e as imagens propostas; não é uma requisição enviada. A implementação da execução deverá verificar a prontidão e a versão das evidências, medir limites de contexto e dividir o material em lotes quando necessário, sem truncamento silencioso.
+
+
+## Contrato de montagem para a implementação
+
+As notas de montagem do arquivo de revisão `C:/wamp64/www/VTSAnalizer/prompt-analise-video.md` não fazem parte do prompt enviado ao modelo. O texto executável é somente `app/prompts/gemini-analysis.md`.
+
+- Enviar cada segmento de transcrição com início e fim reais, mantendo falante quando conhecido. Declarar em `cobertura_enviada` se o material é completo ou parcial e quais intervalos estão ausentes ou incertos.
+- Associar cada imagem selecionada a OCR, timestamp e um ID legível `IMG-###`/`OCR-###`. Persistir o mapa para os IDs internos da aplicação. Enviar a imagem como parte multimodal na posição da tela correspondente.
+- Escapar os textos de título, contexto, transcrição e OCR antes de inserir em marcas estruturais. Conteúdo do vídeo nunca pode fechar uma tag do prompt.
+- Medir o tamanho de entrada e reservar saída segundo os limites do modelo retornado pela API. Dividir e consolidar quando necessário, com índices e cobertura explícitos; nunca truncar silenciosamente.
+- Conferir IDs e horários citados pelo relatório contra o material realmente enviado. Referência válida não prova por si que a conclusão é correta; manter revisão humana.
+
+Um rascunho salvo por uma conta antes desta revisão não muda automaticamente. O botão **Restaurar proposta inicial** carrega o prompt-base atual no editor para conferência e salvamento opcional.
 
 ## Referências oficiais consultadas em 27/09/2026
 

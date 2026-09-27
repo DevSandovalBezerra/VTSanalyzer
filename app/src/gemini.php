@@ -98,7 +98,7 @@ if($path==='/api/ai/gemini/draft'&&$method==='PATCH'){
     query('UPDATE ai_settings SET prompt_draft=?,model=?,draft_version=draft_version+1,updated_at=now() WHERE user_id=?',[trim($prompt),$model,$s['user_id']]);
     audit('gemini.draft_saved');json_response(gemini_public_settings(gemini_settings_row()));
 }
-// Prompt approval is still pending; no route may transmit video evidence yet.
+// The prompt baseline is defined; generation is not implemented and may not transmit evidence yet.
 if(preg_match('#^/api/runs/([a-f0-9]{32})/ai/gemini$#',$path,$m)&&$method==='POST'){
-    owned_run($m[1]);json_response(['error'=>'O prompt está em revisão. A execução será habilitada após a aprovação.'],409);
+    owned_run($m[1]);json_response(['error'=>'A análise com Gemini ainda não foi implementada.'],409);
 }
