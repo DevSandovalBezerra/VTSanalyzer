@@ -24,6 +24,8 @@ function output_documents(string $rid): array {
         'exports'=>['Exportações','exportacoes.json'],
         'index'=>['Índice de arquivos','INDICE.json'],
     ];
+    foreach(query("SELECT id,created_at FROM ai_analyses WHERE run_id=? AND status='completed' ORDER BY created_at DESC",[$rid])->fetchAll(PDO::FETCH_ASSOC) as $a)
+        $documents['ai-'.$a['id']]=['Análise por IA · Gemini · '.$a['created_at'],'gemini/'.$a['id'].'.md'];
     foreach(query('SELECT id,created_at FROM snapshots WHERE run_id=? ORDER BY created_at DESC',[$rid])->fetchAll(PDO::FETCH_ASSOC) as $s)
         $documents['snapshot-'.$s['id']]=['Versão aprovada · '.$s['created_at'],'snapshots/'.$s['id'].'.json'];
     return $documents;

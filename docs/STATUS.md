@@ -1,6 +1,6 @@
 # Estado de execução do PRD
 
-Este arquivo preserva o histórico por data. Para o estado consolidado atual, consulte `../summary.md` e `PLANOS.md`. Gemini substitui Astra como direção da próxima integração; a geração ainda não foi implementada.
+Este arquivo preserva o histórico por data. Para o estado consolidado atual, consulte `../summary.md` e `PLANOS.md`. Gemini substitui Astra como direção da integração. A execução simulada foi implementada em 27/09/2026; a validação com chave real permanece pendente.
 
 Fonte: PRD 0.2 de 23/09/2026. Este arquivo descreve evidências reais, sem equivaler scaffold a requisito concluído.
 
@@ -135,3 +135,10 @@ Validação da configuração Gemini: `tests/gemini_settings.py` passou com chav
 - A proposta revisada foi adotada como prompt-base para a implementação futura. Notas de montagem ficaram no documento de trabalho; somente o trecho PROMPT foi colocado em `app/prompts/gemini-analysis.md`.
 - Ajustes finais: segmentos com início/fim reais; cobertura completa/parcial explícita; OCR como fonte própria; ações entre imagens sem falsa observação; divisão segundo limites efetivos do modelo, com mapa de IDs e verificação de referências; dados escapados ao montar os blocos.
 - A interface e a API deixam claro que a geração ainda não existe. Nenhuma evidência é enviada ao Gemini nesta etapa. Rascunhos de usuários existentes são preservados.
+
+## Execução Gemini — 27/09/2026
+
+- Prompt-base revisado ligado ao fluxo da aplicação; job assíncrono com chave do usuário, seleção de modelo, contagem de tokens e envio de transcrição/OCR/telas selecionadas.
+- Estados de fila, progresso por partes, cancelamento, falha e relatório; Markdown em Análise por IA e no catálogo Outputs.
+- O usuário ainda não cadastrou a chave. `gemini_settings.py` e `gemini_execution.py` passaram com chave/provedor simulados e mídia sintética. Nenhuma geração real foi afirmada.
+- Durante a integração, a migração 006 ainda não aplicada causou erro 500 em Outputs. Ela foi aplicada e o web passou a executar migrações na inicialização; o acesso voltou a responder 200.

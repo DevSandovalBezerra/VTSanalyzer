@@ -3,6 +3,9 @@ services:
     volumes:
       - ./app:/app:ro
       - ./frontend:/frontend:ro
+  gemini-worker:
+    volumes:
+      - ./app:/app:ro
   worker:
     volumes:
       - ./worker:/worker:ro

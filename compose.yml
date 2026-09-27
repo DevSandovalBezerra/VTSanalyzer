@@ -44,6 +44,7 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
     environment: *env
+    command: [sh, -c, "php /app/bin/migrate.php && exec php-fpm"]
     volumes: ["media:/data", "./outputs:/outputs:ro"]
     depends_on:
       postgres: {condition: service_healthy}
@@ -53,6 +54,18 @@ services:
       interval: 15s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
+  gemini-worker:
+    image: ske-web:${APP_VERSION:-0.1.0}
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    command: [php, /app/bin/gemini-worker.php]
+    user: www-data
+    environment: *env
+    volumes: ["media:/data", "./outputs:/outputs"]
+    depends_on:
+      web: {condition: service_healthy}
     restart: unless-stopped
   nginx:
     image: ske-nginx:${APP_VERSION:-0.1.0}

@@ -1,34 +1,29 @@
-# Gemini: prompt-base definido, execução pendente
+# Gemini: análise do vídeo
 
-Esta entrega permite salvar/remover uma chave por usuário, testar o acesso consultando os modelos oficiais e salvar um modelo e prompt por usuário como rascunho. O prompt-base foi revisado em 27/09/2026. A execução ainda não foi implementada: não gera análise nem transmite evidências do vídeo.
+O prompt-base revisado está em `app/prompts/gemini-analysis.md`. A área **Análise por IA** permite salvar uma chave por conta, testar a conexão, selecionar um modelo retornado pela API Gemini, revisar o prompt e gerar um relatório para um vídeo já processado. O relatório aparece na mesma tela e em **Outputs → Todos os arquivos** como Markdown para leitura e download.
 
-O texto proposto está em `app/prompts/gemini-analysis.md` e aparece integralmente no editor Análise por IA. Salvar não dispara tarefas. O endpoint de análise retorna 409 enquanto a execução não estiver implementada. Rascunhos já salvos por contas existentes não são substituídos automaticamente; o usuário pode restaurar o prompt-base no editor.
+O usuário ainda não cadastrou uma chave real. A integração foi verificada com chave e respostas simuladas; uma geração real e a qualidade do relatório ainda precisam ser conferidas com uma chave inserida na interface pelo próprio usuário. Não cole chaves em chat, código ou Git.
 
-## Chaves
+## Chave e envio
 
-As chaves são criptografadas com sodium secretbox e chave derivada por usuário. O segredo mestre fica no volume privado `/data/secrets/gemini-master.key`, com permissão 0600. Para restauração, preservar esse arquivo junto ao banco. Não aparece nos outputs, no Git ou nas respostas HTTP. A tela exibe apenas os quatro últimos caracteres.
+A chave é criptografada com sodium secretbox e derivação por usuário. O segredo mestre fica em `/data/secrets/gemini-master.key` no volume privado, com permissão 0600; preserve-o ao restaurar o banco. A API nunca devolve a chave, apenas os quatro últimos caracteres. O teste de conexão consulta somente a lista de modelos em HTTPS; não envia material do vídeo.
 
-O botão de teste faz somente GET HTTPS para `generativelanguage.googleapis.com/v1beta/models`, com `x-goog-api-key` em cabeçalho, sem redirects, sem conteúdo do vídeo e sem gerar texto. As respostas de erro do provedor não são reproduzidas diretamente. A seleção de modelos vem da API, sem assumir que um modelo fixo está disponível na conta.
+Ao clicar em **Analisar com Gemini**, o servidor exige chave testada, modelo salvo e transcrição/telas sincronizadas. A tarefa é gravada no PostgreSQL e executada pelo serviço `gemini-worker`. Ele envia ao Gemini somente transcrição com horários, OCR, imagens de telas selecionadas, título, contexto e objetivo do projeto. Vídeo e áudio originais não são enviados. Uma chave trocada ou evidências alteradas antes do início invalidam a tarefa. O prompt e as versões das evidências são congelados no pedido. No início da tarefa, as imagens selecionadas são copiadas para uma pasta privada temporária, conferidas novamente e removidas ao terminar. A interface mostra fila, progresso por partes, erro ou conclusão; pode cancelar e iniciar outra análise.
 
-## Proposta de material
+O servidor escapa títulos, contexto, fala e OCR antes de preencher o prompt. Cada tela recebe IDs `IMG-###` e `OCR-###` com horário, e a imagem é enviada junto ao bloco correspondente. A API `countTokens` mede cada lote segundo os limites informados para o modelo, reservando saída. Lotes que não cabem são divididos; relatórios parciais são consolidados, sem descartar evidência silenciosamente. Se uma evidência isolada ou relatório não couber, a tarefa falha com indicação para escolher um modelo maior. Respostas interrompidas por limite de saída não são tratadas como relatório completo.
 
-Transcrição completa e OCR com timestamps, imagens de telas selecionadas e contexto do vídeo/projeto. O painel de uma análise mostra as quantidades e as imagens propostas; não é uma requisição enviada. A implementação da execução deverá verificar a prontidão e a versão das evidências, medir limites de contexto e dividir o material em lotes quando necessário, sem truncamento silencioso.
+O resultado é salvo em `outputs/<projeto>/videos/<vídeo>/analises/<versão>/gemini/<id>.md` e no banco, com mapa dos IDs de evidência. IDs e horários citados são conferidos automaticamente contra o material enviado; referências desconhecidas geram avisos. Essa conferência não valida a interpretação do modelo, portanto o relatório ainda requer revisão humana.
 
+Rascunhos anteriores à revisão do prompt não são substituídos. Para usar o texto novo, clique em **Restaurar prompt-base** e **Salvar prompt e modelo**. O prompt deve conservar os seis marcadores `{{TITULO}}`, `{{CONTEXTO}}`, `{{OBJETIVO_PROJETO}}`, `{{COBERTURA_ENVIADA}}`, `{{TRANSCRICAO}}` e `{{TELAS}}`.
 
-## Contrato de montagem para a implementação
+## Operação e validação
 
-As notas de montagem do arquivo de revisão `C:/wamp64/www/VTSAnalizer/prompt-analise-video.md` não fazem parte do prompt enviado ao modelo. O texto executável é somente `app/prompts/gemini-analysis.md`.
+Em desenvolvimento, inicie com `docker compose -f compose.yml -f compose.dev.yml up -d`. O serviço web aplica migrações antes de ficar pronto; `gemini-worker` aguarda o web. Para conferir os serviços: `docker compose -f compose.yml -f compose.dev.yml ps web gemini-worker`.
 
-- Enviar cada segmento de transcrição com início e fim reais, mantendo falante quando conhecido. Declarar em `cobertura_enviada` se o material é completo ou parcial e quais intervalos estão ausentes ou incertos.
-- Associar cada imagem selecionada a OCR, timestamp e um ID legível `IMG-###`/`OCR-###`. Persistir o mapa para os IDs internos da aplicação. Enviar a imagem como parte multimodal na posição da tela correspondente.
-- Escapar os textos de título, contexto, transcrição e OCR antes de inserir em marcas estruturais. Conteúdo do vídeo nunca pode fechar uma tag do prompt.
-- Medir o tamanho de entrada e reservar saída segundo os limites do modelo retornado pela API. Dividir e consolidar quando necessário, com índices e cobertura explícitos; nunca truncar silenciosamente.
-- Conferir IDs e horários citados pelo relatório contra o material realmente enviado. Referência válida não prova por si que a conclusão é correta; manter revisão humana.
+`tests/gemini_settings.py` verifica criptografia, CSRF, isolamento, teste de modelos simulado e pré-requisitos. `tests/gemini_execution.py` usa mídia sintética e transporte simulado para verificar montagem multimodal, divisão por limite, limpeza das cópias temporárias, persistência e leitura do relatório, sem chamadas ao Google. Nenhum teste usa chave ou vídeo real do usuário.
 
-Um rascunho salvo por uma conta antes desta revisão não muda automaticamente. O botão **Restaurar proposta inicial** carrega o prompt-base atual no editor para conferência e salvamento opcional.
+## Referências oficiais
 
-## Referências oficiais consultadas em 27/09/2026
-
-- https://ai.google.dev/gemini-api/docs/api-key
-- https://ai.google.dev/api/models
-- https://ai.google.dev/api/generate-content
+- [Geração de conteúdo e respostas](https://ai.google.dev/api/generate-content)
+- [Contagem de tokens](https://ai.google.dev/api/tokens)
+- [Imagens inline na API generateContent](https://ai.google.dev/gemini-api/docs/generate-content/image-understanding)

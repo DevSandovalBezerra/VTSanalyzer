@@ -11,8 +11,8 @@ csrf=request(a,'/login','POST',{'email':saved['email'],'password':saved['passwor
 def php(code,data):
     return subprocess.check_output(['docker','compose','exec','-T','--user','www-data','web','php','-r',"require 'src/bootstrap.php'; $path='';$method='GET';require 'src/gemini.php';$v=json_decode(stream_get_contents(STDIN),true);"+code],input=json.dumps(data).encode()).decode()
 assert request(client(),'/ai/gemini')[0]==401
-status,s=request(a,'/ai/gemini');assert status==200 and not s['analysis_enabled'],s
-assert s['prompt_status']=='draft' and 'Mapa cronológico' in s['prompt']
+status,s=request(a,'/ai/gemini');assert status==200 and s['analysis_enabled'],s
+assert s['prompt_status']=='ready' and 'Mapa cronológico' in s['prompt']
 assert request(a,'/ai/gemini/key','POST',{'api_key':'x'*32})[0]==419
 assert request(a,'/ai/gemini/key','POST',{'api_key':'x\n'+'y'*30},csrf)[0]==422
 key='test-key-not-real-'+uuid.uuid4().hex
@@ -28,10 +28,10 @@ models=json.loads(php("""$mock=function($key,$token){return $token===''?['models
 assert [m['id'] for m in models]==['gemini-test-flash','gemini-test-pro'],models
 draft=s['prompt']+'\n\nDê atenção especial aos fluxos demonstrados.'
 status,s=request(a,'/ai/gemini/draft','PATCH',{'prompt':draft},csrf)
-assert status==200 and s['prompt']==draft and s['prompt_status']=='draft' and not s['analysis_enabled'],s
+assert status==200 and s['prompt']==draft and s['prompt_status']=='ready' and s['analysis_enabled'],s
 assert request(a,'/ai/gemini/draft','PATCH',{'model':'invented-model'},csrf)[0]==422
 assert request(a,'/ai/gemini/draft','PATCH',{'prompt':''},csrf)[0]==422
-assert request(a,'/runs/'+saved['run_id']+'/ai/gemini','POST',{},csrf)[0]==409
+assert request(a,'/runs/'+saved['run_id']+'/ai/gemini','POST',{},csrf)[0]==422
 # Populate a mocked model catalog to verify selection validation without external calls.
 php("query('UPDATE ai_settings SET available_models=? WHERE user_id=(SELECT id FROM users WHERE email=?)',[json_encode($v['models']),$v['email']]);",{'email':saved['email'],'models':models})
 status,s=request(a,'/ai/gemini/draft','PATCH',{'prompt':draft,'model':'gemini-test-flash'},csrf)
@@ -49,4 +49,4 @@ finally:
 status,s=request(a,'/ai/gemini/key','DELETE',{},csrf)
 assert status==200 and not s['has_key'] and s['prompt']==draft
 assert request(a,'/ai/gemini/test','POST',{},csrf)[0]==422
-print('PASS: per-user encrypted key, masking, CSRF, replacement/removal, draft persistence, model selection, mocked pagination/filtering, cross-account isolation and analysis approval gate; no external requests')
+print('PASS: per-user encrypted key, masking, CSRF, replacement/removal, draft persistence, model selection, mocked pagination/filtering, cross-account isolation and execution prerequisite gate; no external requests')

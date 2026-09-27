@@ -7,7 +7,8 @@
 - `tests/practical_flow.py`: passou; executa `media.run()`, valida processamento real, formulários mínimos, título por nome de arquivo, biblioteca com/sem análise e isolamento por proprietário.
 - `tests/progress.py`: passou; fila, execução, liberação parcial, sincronização, versões antigas, repetição, falha, cancelamento, downloads e análise duplicada.
 - `tests/progress_ui.cjs`: passou; bloqueios visuais, contagem de etapas, permanência no monitor, reconexão e configuração de IA acessível sem resultado pronto.
-- `tests/gemini_settings.py`: passou com chaves fictícias e transporte simulado. Verifica criptografia por usuário, máscara, CSRF, troca/remoção, catálogo paginado, modelo, rascunho e bloqueio da geração. Não realizou chamadas externas.
+- `tests/gemini_settings.py`: passou com chaves fictícias e transporte simulado. Verifica criptografia por usuário, máscara, CSRF, troca/remoção, catálogo paginado, modelo, rascunho e pré-requisitos da geração. Não realizou chamadas externas.
+- `tests/gemini_execution.py`: passou com vídeo sintético e provedor simulado; verifica fila, montagem multimodal, divisão pelo limite, limpeza da cópia temporária, relatório e catálogo de Outputs. O teste pausa e retoma `gemini-worker` para impedir qualquer requisição externa com a chave simulada.
 - PHP lint, sintaxe JS e `git diff --check`: passaram nas alterações recentes.
 - Navegador: menu Outputs, transcrição, telas com falas, acompanhamento e configuração Gemini conferidos.
 
@@ -19,6 +20,7 @@ Sequência para reproduzir a validação recente:
 python3 tests/practical_flow.py
 python3 tests/progress.py
 python3 tests/gemini_settings.py
+python3 tests/gemini_execution.py
 node tests/progress_ui.cjs
 ```
 

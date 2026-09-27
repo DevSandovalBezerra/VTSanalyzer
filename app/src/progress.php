@@ -29,7 +29,7 @@ function run_output_availability(array $run,array $stages): array {
     return ['transcript'=>$ready['transcript'],
         'screens'=>$ready['screens']&&$ready['frames']&&$ready['ocr']&&$ready['transcript'],
         'files'=>in_array(true,$ready,true),'review'=>$ready['transcript']&&$ready['frames'],
-        'knowledge'=>!in_array(false,$ready,true),'ai'=>false,
+        'knowledge'=>!in_array(false,$ready,true),'ai'=>(bool)query("SELECT 1 FROM ai_analyses WHERE run_id=? AND status='completed' LIMIT 1",[$run['id']??$run['run_id']])->fetchColumn(),
         'sync'=>query("SELECT status,error FROM jobs WHERE project_id=? AND kind='outputs' ORDER BY created_at DESC LIMIT 1",[$run['project_id']])->fetch(PDO::FETCH_ASSOC)?:null];
 }
 function output_document_stage(string $key): ?string {

@@ -3,7 +3,7 @@ let activeOutputState=null;
 function processingStages(r){return typeof r.stages==='string'?JSON.parse(r.stages):r.stages||[];}
 function outputEnabled(r,section){if(section==='ai')return true;return !['transcript','screens','files','review','knowledge','ai'].includes(section)||r.outputs?.[section]===true;}
 function outputWaitLabel(r,section){
-    if(section==='ai')return 'Configurar Gemini e revisar prompt';
+    if(section==='ai')return r.outputs?.ai?'Relatório disponível':'Configurar Gemini e analisar';
     if(outputEnabled(r,section))return 'Disponível';
     const needed=section==='transcript'?['transcript']:section==='screens'?['transcript','frames','ocr','screens']:processingOrder;
     const stages=processingStages(r).filter(s=>needed.includes(s.name));

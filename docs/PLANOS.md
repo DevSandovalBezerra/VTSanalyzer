@@ -22,23 +22,17 @@ Entrada em Outputs; atalhos de transcrição, telas e IA; busca/filtro; título 
 
 Etapas visíveis, acompanhamento automático, proteção contra navegação involuntária, resultados bloqueados até sincronização da versão correta e rejeição de início duplicado. Evidências: progress, progress_ui e navegador.
 
-## P06 — Gemini: configuração e prompt · PROMPT-BASE FECHADO
+## P06 — Gemini: configuração e prompt · CONCLUÍDO
 
-Chave criptografada por conta, teste/listagem de modelos, editor de rascunho e prévia do material. Prompt-base revisado com referências, cobertura e tratamento distinto para imagem, OCR, fala e inferência. Evidência: gemini_settings com transporte simulado e navegador. A geração continua bloqueada no servidor.
+Chave criptografada por conta, teste/listagem de modelos, editor de rascunho e prévia do material. Prompt-base revisado com referências, cobertura e tratamento distinto para imagem, OCR, fala e inferência. Evidência: `gemini_settings` com transporte simulado. Rascunhos salvos permanecem independentes do prompt-base.
 
-**Próximo passo:** implementar a montagem segura do material e a execução P07; testar conexão com chave real fornecida na interface. Rascunhos salvos por usuários permanecem independentes do prompt-base.
+## P07 — Gemini: execução e resultados · IMPLEMENTADO; VALIDAÇÃO REAL PENDENTE
 
-## P07 — Gemini: execução e resultados · PLANEJADO
+O pedido congela prompt e versões das evidências; as imagens usadas são copiadas temporariamente para impedir mistura de revisões; `gemini-worker` processa em segundo plano com chave criptografada por conta. Montagem com transcrição, OCR, imagens selecionadas e metadados; medição `countTokens`, divisão de lotes e consolidação; estados de fila/execução/falha/cancelamento; relatório persistido em Markdown, lido na área IA e em Outputs. Referências desconhecidas geram avisos. O web aplica migrações antes de ficar pronto.
 
-Com o prompt-base definido, implementar:
-- congelamento da versão de prompt e evidências selecionadas;
-- contagem de contexto e divisão em lotes, sem truncamento silencioso;
-- chamada Gemini no servidor/fila, sem revelar a chave;
-- estados claros de fila, execução, falha, cancelamento e resultado;
-- análise do assunto, cronologia, telas, processos e aplicação prática com referências;
-- persistência, leitura e exportação do resultado na área Análise por IA.
+**Verificado:** `gemini_execution` com vídeo sintético e provedor simulado, além de `gemini_settings`, sintaxe e acesso à configuração. Nenhum dado foi enviado ao Google nos testes.
 
-**Aceite:** executar com mídia autorizada; recuperar referências válidas; exibir limitações; testar falhas de autenticação, cota, timeout e retomada; demonstrar no navegador que o resultado vem do Gemini.
+**Pendente para aceite integral:** inserir uma chave real na interface, testar modelo/cota e gerar um relatório com vídeo autorizado; avaliar qualidade e referências no navegador. O usuário informou que ainda não cadastrou a chave.
 
 ## P08 — Documentação e publicação · CONCLUÍDO
 
@@ -65,6 +59,6 @@ Comparação semântica com código-alvo; importação ZIP/Git; editor visual de
 3. Outputs é a entrada principal; resultados incompletos ficam indisponíveis.
 4. O progresso mede etapas concluídas, sem falsa estimativa de tempo.
 5. Gemini é o provedor solicitado; Astra permanece apenas como contrato legado desconectado.
-6. Prompt precisa de aprovação conjunta antes de implementar/liberar geração.
+6. Prompt-base revisado e incorporado; rascunhos pessoais antigos não são substituídos automaticamente.
 7. Código canônico no WSL; WAMP é apenas entrega/abertura.
 8. Documentação e memória registram fatos comprovados e pendências, sem tratar planos como entregas.

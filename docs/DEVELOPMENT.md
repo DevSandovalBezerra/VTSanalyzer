@@ -14,7 +14,7 @@ PHP, JS e CSS usam bind mounts no desenvolvimento: recarregar a página aplica m
 docker compose restart worker scheduler
 ```
 
-Dependências e Dockerfiles exigem reconstrução das imagens. Migrações incrementais ficam em `app/migrations/`; aplique com `docker compose exec -T web php bin/migrate.php`. Não há migrações reversas implementadas.
+Dependências e Dockerfiles exigem reconstrução das imagens. Migrações incrementais ficam em `app/migrations/`; o web as aplica ao iniciar. Em uma instalação já ativa, aplique com `docker compose exec -T web php bin/migrate.php` antes de testar as novas rotas. Não há migrações reversas implementadas.
 
 ## Convenções de produto
 
@@ -22,7 +22,7 @@ O objetivo é uso interno prático: nome do projeto e arquivo de vídeo são os 
 
 O progresso conta etapas, não segundos. Todo acesso a um resultado incompleto deve respeitar os indicadores devolvidos pela API. Uma atualização automática não pode trocar a seção que o usuário está lendo. Nunca apresentar revisão manual como análise gerada por IA.
 
-A proposta Gemini está em `app/prompts/gemini-analysis.md`. Sua execução continua bloqueada até aprovação do prompt e implementação da integração, com limites e rastreabilidade das evidências.
+O prompt Gemini está em `app/prompts/gemini-analysis.md`. O serviço `gemini-worker` processa tarefas com transcrição, OCR e telas selecionadas; confira `docs/GEMINI.md` para limites, segurança, estados e testes simulados. Não use a chave de um usuário para testes automatizados.
 
 ## Verificar e entregar
 

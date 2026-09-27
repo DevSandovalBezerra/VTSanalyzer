@@ -56,8 +56,12 @@ Referência do comportamento atual em `app/public/index.php` e `app/src/`, confe
 - `POST /api/ai/gemini/key`: `api_key`; guarda criptografada e invalida validação/catalogação anterior.
 - `DELETE /api/ai/gemini/key`: remove a cópia local.
 - `POST /api/ai/gemini/test`: consulta modelos na API Google; não gera análise.
-- `PATCH /api/ai/gemini/draft`: prompt e modelo validado, permanecendo rascunho.
-- `POST /api/runs/{id}/ai/gemini`: verifica propriedade e retorna **409**, aguardando aprovação. Não cria tarefa.
+- `PATCH /api/ai/gemini/draft`: salva prompt e modelo selecionado.
+- `POST /api/runs/{id}/ai/gemini`: exige chave testada, modelo salvo e outputs locais prontos; cria tarefa (202). Rejeita outra tarefa ativa (409).
+- `GET /api/runs/{id}/ai/gemini`: estado, progresso, erro, avisos e relatório concluído.
+- `POST /api/runs/{id}/ai/gemini/{tarefa}/cancel`: cancela tarefa ativa (202).
+- `GET /api/runs/{id}/ai/gemini/{tarefa}/download`: baixa o relatório Markdown concluído.
+- Relatórios concluídos também entram no catálogo de outputs com chave `ai-{tarefa}`.
 
 ## Operação
 

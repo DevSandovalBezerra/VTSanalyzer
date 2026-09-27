@@ -20,12 +20,12 @@ Referência: `.env.example` e `compose.yml`. Não colocar segredos reais em docu
 
 A chave Gemini é configurada pela interface e pertence à conta conectada. O banco guarda a chave criptografada; o segredo mestre fica em `/data/secrets/gemini-master.key`. Preserve ambos no backup.
 
-`MODEL_PROFILE=astra`, `MODEL_ENDPOINT`, `MODEL_ID`, `MODEL_API_KEY` e `ALLOW_EXTERNAL_MODELS=0` pertencem ao gateway legado. Não configuram o painel Gemini nem habilitam sua geração. O teste de conexão Gemini consulta a API de modelos quando o usuário clica em Testar. Não envia evidências.
+`MODEL_PROFILE=astra`, `MODEL_ENDPOINT`, `MODEL_ID`, `MODEL_API_KEY` e `ALLOW_EXTERNAL_MODELS=0` pertencem ao gateway legado. Não configuram o painel Gemini. A geração Gemini depende da chave cadastrada e testada pela própria conta na interface. O teste de conexão Gemini consulta a API de modelos quando o usuário clica em Testar. Não envia evidências.
 
 A configuração de ai-memory é independente: veja [AI-MEMORY.md](AI-MEMORY.md).
 
 ## Arquivos Compose
 
-`compose.yml` define os seis serviços e as imagens com código. `compose.dev.yml` monta fontes locais em leitura para desenvolvimento. `compose.gpu.yml` é uma opção experimental; aceleração GPU não foi validada.
+`compose.yml` define os serviços, incluindo `gemini-worker`, e as imagens com código. O web aplica migrações ao iniciar; `gemini-worker` aguarda o web ficar saudável. `compose.dev.yml` monta fontes locais em leitura para desenvolvimento. `compose.gpu.yml` é uma opção experimental; aceleração GPU não foi validada.
 
 Alterações em variáveis exigem recriar os serviços para serem aplicadas. Mudanças em dependências ou Dockerfiles exigem rebuild. Nunca compartilhar a saída integral de `docker compose config` com segredos interpolados.

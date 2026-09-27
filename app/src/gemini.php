@@ -10,7 +10,7 @@ function gemini_public_settings(array $s): array {
         'validated_at'=>$s['validated_at'],'models'=>json_decode($s['available_models'],true),
         'model'=>$s['model'],'prompt'=>$s['prompt_draft']?:gemini_default_prompt(),
         'default_prompt'=>gemini_default_prompt(),'draft_version'=>(int)$s['draft_version'],
-        'prompt_status'=>'draft','analysis_enabled'=>false];
+        'prompt_status'=>'ready','analysis_enabled'=>true];
 }
 function gemini_master_key(): string {
     $dir='/data/secrets';if(!is_dir($dir)&&!mkdir($dir,0700,true)&&!is_dir($dir))throw new RuntimeException('Secret storage unavailable');
@@ -98,7 +98,50 @@ if($path==='/api/ai/gemini/draft'&&$method==='PATCH'){
     query('UPDATE ai_settings SET prompt_draft=?,model=?,draft_version=draft_version+1,updated_at=now() WHERE user_id=?',[trim($prompt),$model,$s['user_id']]);
     audit('gemini.draft_saved');json_response(gemini_public_settings(gemini_settings_row()));
 }
-// The prompt baseline is defined; generation is not implemented and may not transmit evidence yet.
-if(preg_match('#^/api/runs/([a-f0-9]{32})/ai/gemini$#',$path,$m)&&$method==='POST'){
-    owned_run($m[1]);json_response(['error'=>'A análise com Gemini ainda não foi implementada.'],409);
+require_once __DIR__.'/gemini_engine.php';
+function gemini_job_public(array $job): array {
+    return ['id'=>$job['id'],'status'=>$job['status'],'model'=>$job['model'],
+        'created_at'=>$job['created_at'],'updated_at'=>$job['updated_at'],
+        'progress_done'=>(int)$job['progress_done'],'progress_total'=>(int)$job['progress_total'],
+        'error'=>$job['error'],'warnings'=>json_decode($job['warnings'],true),
+        'report'=>$job['status']==='completed'?$job['result_text']:null];
+}
+if(preg_match('#^/api/runs/([a-f0-9]{32})/ai/gemini(?:/([a-f0-9]{32})/(cancel|download))?$#',$path,$m)){
+    $run=owned_run($m[1]);$jobId=$m[2]??null;$action=$m[3]??null;
+    if($action==='cancel'&&$method==='POST'){
+        $changed=query("UPDATE ai_analyses SET status='cancelled',updated_at=now() WHERE id=? AND run_id=? AND user_id=? AND status IN ('queued','processing')",[$jobId,$run['id'],$_SESSION['user']['id']])->rowCount();
+        if(!$changed)json_response(['error'=>'A análise não está ativa.'],409);
+        audit('gemini.analysis_cancelled',$jobId);json_response(['ok'=>true],202);
+    }
+    if($action==='download'&&$method==='GET'){
+        $job=query("SELECT id FROM ai_analyses WHERE id=? AND run_id=? AND user_id=? AND status='completed'",[$jobId,$run['id'],$_SESSION['user']['id']])->fetchColumn();
+        if(!$job)json_response(['error'=>'Relatório indisponível.'],404);
+        stream_file(run_output_path($run).'/gemini/'.$job.'.md','text/markdown; charset=utf-8',true);
+    }
+    if($jobId!==null)json_response(['error'=>'Recurso não encontrado.'],404);
+    if($method==='GET'){
+        $job=query('SELECT * FROM ai_analyses WHERE run_id=? AND user_id=? ORDER BY created_at DESC LIMIT 1',[$run['id'],$_SESSION['user']['id']])->fetch(PDO::FETCH_ASSOC);
+        json_response($job?gemini_job_public($job):['status'=>'not_started']);
+    }
+    if($method==='POST'){
+        if(!in_array($run['status'],['review','approved'],true))json_response(['error'=>'Aguarde o processamento local terminar antes de iniciar a análise Gemini.'],409);
+        $settings=gemini_settings_row();
+        if(!$settings['gemini_key_encrypted']||!$settings['validated_at'])json_response(['error'=>'Salve sua chave Gemini e teste a conexão antes de analisar.'],422);
+        $models=json_decode($settings['available_models'],true);
+        if(!in_array($settings['model'],array_column($models,'id'),true))json_response(['error'=>'Escolha um modelo disponível e salve a escolha.'],422);
+        $prompt=$settings['prompt_draft']?:gemini_default_prompt();
+        foreach(['{{TITULO}}','{{CONTEXTO}}','{{OBJETIVO_PROJETO}}','{{COBERTURA_ENVIADA}}','{{TRANSCRICAO}}','{{TELAS}}'] as $marker)
+            if(!str_contains($prompt,$marker))json_response(['error'=>'O prompt precisa conservar os seis marcadores do material. Restaure o prompt-base e salve novamente.'],422);
+        $stages=query('SELECT name,status,updated_at FROM stages WHERE run_id=?',[$run['id']])->fetchAll(PDO::FETCH_ASSOC);
+        $ready=run_output_availability($run,$stages);
+        if(!$ready['screens'])json_response(['error'=>'Aguarde a transcrição e as telas serem concluídas e salvas antes de analisar.'],409);
+        $project=owned_project($run['project_id']);
+        if(empty($project['output_directory']))json_response(['error'=>'A pasta de outputs ainda não está pronta.'],409);
+        $id=id();
+        try{query('INSERT INTO ai_analyses(id,run_id,user_id,model,prompt_snapshot,draft_version,key_version,stage_versions) VALUES (?,?,?,?,?,?,?,?)',
+            [$id,$run['id'],$_SESSION['user']['id'],$settings['model'],$prompt,$settings['draft_version'],$settings['key_version'],json_encode(gemini_stage_versions($run['id']),JSON_THROW_ON_ERROR)]);}
+        catch(PDOException $e){if($e->getCode()==='23505')json_response(['error'=>'Já existe uma análise em andamento para este vídeo.'],409);throw $e;}
+        audit('gemini.analysis_queued',$id);
+        json_response(gemini_job_public(query('SELECT * FROM ai_analyses WHERE id=?',[$id])->fetch(PDO::FETCH_ASSOC)),202);
+    }
 }

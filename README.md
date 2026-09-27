@@ -2,7 +2,7 @@
 
 Aplicação interna para destrinchar vídeos: transcrição local, capturas de tela, OCR, revisão de evidências e exportação do conhecimento. A interface prioriza os **Outputs**, com acesso direto a **Transcrição**, **Telas principais** e **Análise por IA**.
 
-Estado em **27/09/2026**: processamento local e leitura de resultados funcionais. A configuração e o prompt-base do Gemini estão definidos; a execução da análise por IA ainda precisa ser implementada. O PRD completo ainda não está concluído.
+Estado em **27/09/2026**: processamento local e leitura de resultados funcionais. O prompt-base está ligado à execução Gemini em segundo plano, com relatório na área Análise por IA e em Outputs. A geração real aguarda uma chave inserida pelo usuário; os testes usaram provedor simulado. O PRD completo ainda não está concluído.
 
 ## Fluxo de uso
 
@@ -11,7 +11,7 @@ Estado em **27/09/2026**: processamento local e leitura de resultados funcionais
 3. Envie um vídeo MP4, MOV, MKV ou WebM. O título pode ficar vazio: será usado o nome do arquivo. Origem e contexto são opcionais.
 4. Após a validação do vídeo, inicie uma análise e acompanhe o processamento.
 5. Abra a transcrição ou as telas quando o respectivo resultado estiver disponível. A barra indica etapas concluídas; não estima tempo restante.
-6. Em **Análise por IA**, configure sua chave Gemini, consulte os modelos disponíveis e revise o prompt proposto. Salvar o rascunho não inicia uma análise.
+6. Em **Análise por IA**, salve sua chave Gemini, teste a conexão, escolha um modelo e revise o prompt. No vídeo já processado, clique em **Analisar com Gemini**; acompanhe o progresso e leia ou baixe o relatório. Salvar o prompt não inicia a análise.
 
 O menu Outputs abre depois do login e permite filtrar por projeto ou buscar vídeos. Cada versão de análise tem seus próprios resultados. A galeria associa imagens ao OCR e às falas do trecho. O leitor oferece busca, cópia e download. A revisão manual e a exportação de conhecimento continuam disponíveis.
 
@@ -24,14 +24,13 @@ Consulte [Instalação e primeiro uso](docs/GETTING-STARTED.md) para o passo a p
 ```bash
 cd ~/projetos/system-knowledge-extractor
 docker compose -f compose.yml -f compose.dev.yml up -d --wait
-docker compose exec -T web php bin/migrate.php
 ```
 
 Para baixar os pesos de transcrição na primeira instalação, execute `bash scripts/download-model.sh` com os serviços ativos. A transcrição usa faster-whisper local; áudio não é enviado para esse processamento.
 
 ## Dados e resultados
 
-Os originais ficam no volume Docker `media`. Os derivados ficam em `outputs/<nome-do-projeto>--<id>/videos/<id>/analises/vNNN--<id>/`, separados por projeto, vídeo e versão. Há transcrição TXT/SRT/JSON, áudio quando disponível, imagens, OCR, telas, histórico, snapshots e exportações.
+Os originais ficam no volume Docker `media`. Os derivados ficam em `outputs/<nome-do-projeto>--<id>/videos/<id>/analises/vNNN--<id>/`, separados por projeto, vídeo e versão. Há transcrição TXT/SRT/JSON, áudio quando disponível, imagens, OCR, telas, relatório Gemini quando solicitado, histórico, snapshots e exportações.
 
 O GitHub contém código, documentação e fixtures sintéticas. Vídeos reais, outputs, banco, chaves e `.env` ficam fora do Git. Fazer push não é fazer backup dos dados da aplicação.
 
