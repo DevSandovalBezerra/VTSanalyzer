@@ -26,13 +26,13 @@ Etapas visíveis, acompanhamento automático, proteção contra navegação invo
 
 Chave criptografada por conta, teste/listagem de modelos e editor avançado do prompt em Configurar Gemini. Modelo tem salvamento independente do prompt. Prompt-base revisado com referências, cobertura e tratamento distinto para imagem, OCR, fala e inferência. Evidência: `gemini_settings` com transporte simulado. Rascunhos salvos permanecem independentes do prompt-base.
 
-## P07 — Gemini: execução e resultados · IMPLEMENTADO; VALIDAÇÃO REAL PENDENTE
+## P07 — Gemini: execução e resultados · FUNCIONAL COM VÍDEO REAL; REVISÃO HUMANA PENDENTE
 
 O pedido congela prompt e versões das evidências; as imagens usadas são copiadas temporariamente para impedir mistura de revisões; `gemini-worker` processa em segundo plano com chave criptografada por conta. Montagem com transcrição, OCR, imagens selecionadas e metadados; medição `countTokens`, divisão de lotes e consolidação; estados de fila/execução/falha/cancelamento; relatório persistido em Markdown, lido na análise do vídeo e em Outputs. O fluxo da interface separa configuração global de início, acompanhamento e leitura do resultado por vídeo. Referências desconhecidas geram avisos. O web aplica migrações antes de ficar pronto.
 
 **Verificado:** `gemini_execution` com vídeo sintético e provedor simulado, além de `gemini_settings`, sintaxe e acesso à configuração. Nenhum dado foi enviado ao Google nos testes.
 
-**Pendente para aceite integral:** inserir uma chave real na interface, testar modelo/cota e gerar um relatório com vídeo autorizado; avaliar qualidade e referências no navegador. Na conferência da interface em 27/09, havia uma chave testada e uma tarefa que falhou por recusa do material ou modelo. Ainda não há relatório real concluído; investigar a causa e validar a qualidade.
+**Validação real em 27/09:** o modelo salvo `gemini-2.5-flash` aparecia no catálogo, mas a chamada mínima retornou HTTP 404 por indisponibilidade para esta chave. O teste de conexão passou a verificar `countTokens` antes de selecionar/salvar modelos, escolhendo `gemini-3.8-flash`. Foram conferidos 382 segmentos de fala e 87 telas em 9 lotes; o tamanho do material não causou a recusa. A primeira execução corrigida encontrou HTTP 503 transitório em 5/10; a política de até cinco tentativas com espera exponencial resolveu esse caso. A execução seguinte terminou em 10/10, com relatório persistido e visível no Chrome. Dez horários citados no relatório não constam nas evidências e foram sinalizados. **Pendente para aceite integral:** revisão humana da precisão, cobertura e referências do relatório; avaliação de custo/cotas e de mais vídeos.
 
 ## P08 — Documentação e publicação · CONCLUÍDO
 

@@ -67,6 +67,17 @@ function gemini_list_models(string $key,?callable $transport=null): array {
     if(!$models)throw new RuntimeException('Nenhum modelo de análise de conteúdo disponível para esta chave.');
     return array_values($models);
 }
+require_once __DIR__.'/gemini_engine.php';
+function gemini_probe_model(string $key,string $model,?callable $transport=null): bool {
+    try {
+        $response=($transport??'gemini_http')($key,$model,'countTokens',
+            ['contents'=>[['role'=>'user','parts'=>[['text'=>'Verificação de disponibilidade do modelo.']]]]]);
+        return is_int($response['totalTokens']??null);
+    } catch(RuntimeException $e) {return false;}
+}
+function gemini_preferred_models(): array {
+    return ['gemini-3.8-flash','gemini-3.7-flash','gemini-3.6-flash','gemini-3.5-flash','gemini-3.5-flash-lite'];
+}
 if($path==='/api/ai/gemini'&&$method==='GET')json_response(gemini_public_settings(gemini_settings_row()));
 if($path==='/api/ai/gemini/key'&&$method==='POST'){
     $v=input();$key=is_string($v['api_key']??null)?trim($v['api_key']):'';
@@ -82,11 +93,18 @@ if($path==='/api/ai/gemini/key'&&$method==='DELETE'){
 if($path==='/api/ai/gemini/test'&&$method==='POST'){
     $s=gemini_settings_row();if(empty($s['gemini_key_encrypted']))json_response(['error'=>'Salve sua chave antes de testar a conexão.'],422);
     $key=gemini_open_key($s['gemini_key_encrypted'],$s['user_id']);
-    try{$models=gemini_list_models($key);}catch(RuntimeException $e){sodium_memzero($key);query('UPDATE ai_settings SET validated_at=NULL WHERE user_id=? AND key_version=?',[$s['user_id'],$s['key_version']]);json_response(['error'=>$e->getMessage()],502);}
-    sodium_memzero($key);$selected='';
-    foreach($models as $model)if($model['id']===$s['model'])$selected=$model['id'];
-    if($selected==='')foreach($models as $model)if(str_contains($model['id'],'flash')&&!preg_match('/preview|experimental|exp-/',$model['id'])){$selected=$model['id'];break;}
-    $selected=$selected?:$models[0]['id'];
+    try {
+        $models=gemini_list_models($key);$catalog=array_column($models,'id');$selected='';
+        $candidates=array_unique(array_merge([$s['model']],gemini_preferred_models(),$catalog));
+        foreach($candidates as $candidate){
+            if($candidate!==''&&in_array($candidate,$catalog,true)&&gemini_probe_model($key,$candidate)){$selected=$candidate;break;}
+        }
+        if($selected==='')throw new RuntimeException('Nenhum modelo da lista respondeu à verificação de uso. Confira acesso e cota da chave no Google AI Studio.');
+    } catch(RuntimeException $e) {
+        sodium_memzero($key);query('UPDATE ai_settings SET validated_at=NULL WHERE user_id=? AND key_version=?',[$s['user_id'],$s['key_version']]);
+        json_response(['error'=>$e->getMessage()],502);
+    }
+    sodium_memzero($key);
     $changed=query('UPDATE ai_settings SET available_models=?,model=?,validated_at=now(),updated_at=now() WHERE user_id=? AND key_version=?',[json_encode($models),$selected,$s['user_id'],$s['key_version']])->rowCount();
     if(!$changed)json_response(['error'=>'A chave mudou durante o teste. Teste novamente.'],409);
     audit('gemini.connection_tested');json_response(gemini_public_settings(gemini_settings_row()));
@@ -96,17 +114,19 @@ if($path==='/api/ai/gemini/model'&&$method==='PATCH'){
     $available=json_decode($s['available_models'],true)?:[];
     if(!$s['validated_at']||!is_string($model)||!in_array($model,array_column($available,'id'),true))
         json_response(['error'=>'Teste a conexão e escolha um dos modelos disponíveis.'],422);
+    $key=gemini_open_key($s['gemini_key_encrypted'],$s['user_id']);
+    try{$usable=gemini_probe_model($key,$model);}finally{sodium_memzero($key);}
+    if(!$usable)json_response(['error'=>'Este modelo aparece no catálogo, mas não aceita chamadas com esta chave. Escolha outro modelo.'],422);
     query('UPDATE ai_settings SET model=?,updated_at=now() WHERE user_id=?',[$model,$s['user_id']]);
     audit('gemini.model_saved');json_response(gemini_public_settings(gemini_settings_row()));
 }
 if($path==='/api/ai/gemini/draft'&&$method==='PATCH'){
-    $s=gemini_settings_row();$v=input();$prompt=$v['prompt']??($s['prompt_draft']?:gemini_default_prompt());$model=$v['model']??$s['model'];
+    $s=gemini_settings_row();$v=input();$prompt=$v['prompt']??($s['prompt_draft']?:gemini_default_prompt());
+    if(array_key_exists('model',$v))json_response(['error'=>'Salve o modelo separadamente em Configurar Gemini.'],422);
     if(!is_string($prompt)||trim($prompt)===''||strlen($prompt)>24000)json_response(['error'=>'O prompt deve conter texto e ter até 24.000 bytes.'],422);
-    if(!is_string($model)||($model!==''&&!in_array($model,array_column(json_decode($s['available_models'],true),'id'),true)))json_response(['error'=>'Teste a conexão e escolha um dos modelos disponíveis.'],422);
-    query('UPDATE ai_settings SET prompt_draft=?,model=?,draft_version=draft_version+1,updated_at=now() WHERE user_id=?',[trim($prompt),$model,$s['user_id']]);
+    query('UPDATE ai_settings SET prompt_draft=?,draft_version=draft_version+1,updated_at=now() WHERE user_id=?',[trim($prompt),$s['user_id']]);
     audit('gemini.draft_saved');json_response(gemini_public_settings(gemini_settings_row()));
 }
-require_once __DIR__.'/gemini_engine.php';
 function gemini_job_public(array $job): array {
     return ['id'=>$job['id'],'status'=>$job['status'],'model'=>$job['model'],
         'created_at'=>$job['created_at'],'updated_at'=>$job['updated_at'],

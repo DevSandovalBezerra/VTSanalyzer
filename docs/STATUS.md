@@ -1,6 +1,6 @@
 # Estado de execução do PRD
 
-Este arquivo preserva o histórico por data. Para o estado consolidado atual, consulte `../summary.md` e `PLANOS.md`. Gemini substitui Astra como direção da integração. A execução simulada foi implementada em 27/09/2026; a validação com chave real permanece pendente.
+Este arquivo preserva o histórico por data. Para o estado consolidado atual, consulte `../summary.md` e `PLANOS.md`. Gemini substitui Astra como direção da integração. A execução simulada foi implementada em 27/09/2026; uma análise com chave real foi concluída em 27/09/2026; a revisão factual do relatório permanece pendente.
 
 Fonte: PRD 0.2 de 23/09/2026. Este arquivo descreve evidências reais, sem equivaler scaffold a requisito concluído.
 
@@ -149,3 +149,10 @@ Validação da configuração Gemini: `tests/gemini_settings.py` passou com chav
 - **Outputs → Análise por IA** lista os vídeos com o estado mais recente da tarefa. A página de cada vídeo tem percurso único: evidências prontas → iniciar/acompanhar → ler relatório. Falha oferece tentar novamente ou revisar modelo e prompt; a configuração permite voltar ao mesmo vídeo.
 - Testes `gemini_flow_ui.cjs`, `gemini_settings.py` e `gemini_execution.py` passaram com provedor simulado; sintaxe PHP/JS e navegação no Chrome verificadas. Nenhum teste automatizado enviou material ao Google.
 - Na interface havia uma chave testada e uma tarefa real com falha por recusa do material ou modelo. A causa precisa ser investigada antes de afirmar que a geração real está funcional. O agente não iniciou outra tarefa nem alterou a configuração da conta.
+
+## Diagnóstico e conclusão da análise Gemini — 27/09/2026
+
+- Recusa inicial: o catálogo listava `gemini-2.5-flash`, mas `countTokens` mínimo retornou HTTP 404 para a chave da conta; o texto anterior ocultava o código HTTP. O modelo escolhido automaticamente após prova de uso foi `gemini-3.8-flash`.
+- Material: 382 trechos de transcrição e 87 telas selecionadas, organizados em 9 lotes de 442–720 KB de JSON; vídeo e áudio originais não foram enviados. Esse tamanho não foi a causa da falha inicial.
+- A execução com o novo modelo chegou a 5/10 e falhou com HTTP 503. Foi acrescentada repetição limitada, com espera exponencial e variação aleatória, para timeout/408/429/5xx transitórios. Logs registram somente ação, modelo, HTTP e tentativa.
+- Nova execução do mesmo vídeo concluiu 10/10, gravou Markdown em Outputs e banco e abriu o relatório no Chrome. A repetição por HTTP 503 ocorreu e a tarefa prosseguiu. Dez referências de horário não presentes nas evidências foram sinalizadas; ainda requerem revisão humana. Chave, conteúdo e outputs privados não foram registrados no Git.

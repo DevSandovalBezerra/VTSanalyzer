@@ -23,15 +23,15 @@ Fluxo simplificado: título por nome de arquivo, objetivo/origem/contexto opcion
 
 ## Gemini: estado atual
 
-O prompt-base revisado está em `app/prompts/gemini-analysis.md`. Configurar Gemini reúne chave, teste de conexão, modelo e prompt avançado. Outputs → Análise por IA lista vídeos; a tela de cada vídeo permite iniciar, acompanhar, cancelar e ler/baixar o relatório. Configuração e resultado não dividem o mesmo formulário. A chave é criptografada por conta; o teste de conexão só lista modelos. O processador envia transcrição, OCR, telas selecionadas e contexto, sem vídeo/áudio originais. Há contagem de tokens, divisão/consolidação, cópia temporária das imagens para manter a versão e avisos de referências não encontradas. Consulte [GEMINI.md](docs/GEMINI.md).
+O prompt-base revisado está em `app/prompts/gemini-analysis.md`. Configurar Gemini reúne chave, teste de conexão, modelo e prompt avançado. Outputs → Análise por IA lista vídeos; a tela de cada vídeo permite iniciar, acompanhar, cancelar e ler/baixar o relatório. Configuração e resultado não dividem o mesmo formulário. A chave é criptografada por conta; o teste de conexão lista e prova o acesso ao modelo com uma chamada mínima. O processador envia transcrição, OCR, telas selecionadas e contexto, sem vídeo/áudio originais. Há contagem de tokens, divisão/consolidação, cópia temporária das imagens para manter a versão e avisos de referências não encontradas. Consulte [GEMINI.md](docs/GEMINI.md).
 
-**Ainda não há relatório real concluído:** a interface mostrou uma chave testada e uma tarefa com falha de recusa do material ou modelo em 27/09. Os testes automatizados usam chave e respostas simuladas; a causa da falha real e a qualidade do relatório requerem avaliação posterior. Nunca registrar ou pedir a chave no chat.
+Em 27/09, a recusa inicial foi diagnosticada: `gemini-2.5-flash` constava no catálogo, mas a chamada mínima `countTokens` retornou HTTP 404 para esta chave. O teste de conexão agora comprova uso do modelo e selecionou `gemini-3.8-flash`; o erro HTTP informa a causa. O material medido tinha 382 segmentos de fala e 87 telas em 9 lotes, sem ultrapassar o limite local de envio. Uma primeira execução avançou até 5/10 e encontrou HTTP 503. Após adicionar repetição com espera exponencial, a execução real terminou em 10/10 e salvou o relatório no banco e em Outputs. O relatório tem dez avisos de horários não encontrados nas evidências; revisar essas referências antes de usar conclusões como fatos. Nunca registrar ou pedir a chave no chat.
 
 O gateway Astra em `worker/gateway.py` é legado e não chama o Gemini.
 
 ## Validação
 
-Em 27/09 passaram `gemini_settings` e `gemini_execution` com transporte simulado, incluindo leitura do relatório em Outputs, sintaxe PHP/JS e acesso autenticado a Outputs e à configuração após migração. O fluxo de interface foi separado em configuração global e análise por vídeo; consulte `gemini_flow_ui.cjs`. O teste real do Gemini aguarda a chave do usuário. O processador `gemini-worker` está ativo. Verificar logs e status após qualquer atualização; o web aplica migrações ao iniciar.
+Em 27/09 passaram `gemini_settings` e `gemini_execution` com transporte simulado, incluindo leitura do relatório em Outputs, sintaxe PHP/JS e acesso autenticado a Outputs e à configuração após migração. O fluxo de interface foi separado em configuração global e análise por vídeo; consulte `gemini_flow_ui.cjs`. Além dos testes simulados, a análise real de um vídeo existente foi concluída e aberta no Chrome com `gemini-3.8-flash`; `gemini-worker` está ativo. A qualidade factual integral do texto não foi atestada. Verificar logs e status após qualquer atualização; o web aplica migrações ao iniciar.
 
 ## Dados e continuidade
 

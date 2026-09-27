@@ -24,6 +24,9 @@ const complete=html({status:'completed',model:'gemini-test',id:'b'.repeat(32),wa
 assert.match(complete,/gemini-report/);assert.match(complete,/Baixar Markdown/);
 assert.match(complete,/<details class="form-details ai-repeat">/);
 assert.doesNotMatch(complete,/name="api_key"|gemini-model|gemini-prompt/);
+const warned=html({status:'completed',model:'gemini-test',id:'b'.repeat(32),warnings:['Horário <incerto>']},configured);
+assert.match(warned,/1 referência do relatório precisa de revisão/);
+assert.match(warned,/Horário &lt;incerto&gt;/);
 const failed=html({status:'failed',error:'Falha <externa>'},configured);
 assert.match(failed,/Análise falhou/);assert.match(failed,/Falha &lt;externa&gt;/);assert.match(failed,/gemini-analyze/);assert.match(failed,/gemini-configure/);
 console.log('PASS: configuração separada; análise tem começo, progresso, falha e relatório como estado final; conteúdo escapado');

@@ -73,23 +73,33 @@ function gemini_parts(array $job,array $run,array $project,array $events,string 
     }
     $parts[]=['text'=>$after];return $parts;
 }
+function gemini_retryable_status(int $code): bool {return in_array($code,[408,429,500,502,503,504],true);}
 function gemini_http(string $key,string $model,string $action,array $body): array {
     if(!preg_match('/^gemini-[a-zA-Z0-9._-]+$/D',$model)||!in_array($action,['countTokens','generateContent'],true))throw new RuntimeException('Modelo Gemini inválido.');
     $url='https://generativelanguage.googleapis.com/v1beta/models/'.$model.':'.$action;
     $payload=json_encode($body,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE);
     if(strlen($payload)>18*1024*1024)throw new RuntimeException('Lote de evidências excede o limite de envio.');
-    $curl=curl_init($url);$response='';
-    curl_setopt_array($curl,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>$payload,
-        CURLOPT_HTTPHEADER=>['x-goog-api-key: '.$key,'Content-Type: application/json'],CURLOPT_FOLLOWLOCATION=>false,
-        CURLOPT_CONNECTTIMEOUT=>10,CURLOPT_TIMEOUT=>$action==='generateContent'?240:45,
-        CURLOPT_SSL_VERIFYPEER=>true,CURLOPT_SSL_VERIFYHOST=>2,CURLOPT_PROTOCOLS=>CURLPROTO_HTTPS,
-        CURLOPT_WRITEFUNCTION=>function($handle,$chunk)use(&$response){if(strlen($response)+strlen($chunk)>8*1024*1024)return 0;$response.=$chunk;return strlen($chunk);}]);
-    $ok=curl_exec($curl);$code=curl_getinfo($curl,CURLINFO_RESPONSE_CODE);curl_close($curl);
+    for($attempt=0;$attempt<=4;$attempt++){
+        $curl=curl_init($url);$response='';
+        curl_setopt_array($curl,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>$payload,
+            CURLOPT_HTTPHEADER=>['x-goog-api-key: '.$key,'Content-Type: application/json'],CURLOPT_FOLLOWLOCATION=>false,
+            CURLOPT_CONNECTTIMEOUT=>10,CURLOPT_TIMEOUT=>$action==='generateContent'?240:45,
+            CURLOPT_SSL_VERIFYPEER=>true,CURLOPT_SSL_VERIFYHOST=>2,CURLOPT_PROTOCOLS=>CURLPROTO_HTTPS,
+            CURLOPT_WRITEFUNCTION=>function($handle,$chunk)use(&$response){if(strlen($response)+strlen($chunk)>8*1024*1024)return 0;$response.=$chunk;return strlen($chunk);}]);
+        $ok=curl_exec($curl);$code=curl_getinfo($curl,CURLINFO_RESPONSE_CODE);$curlError=curl_errno($curl);curl_close($curl);
+        $retryable=($ok===false&&$curlError===CURLE_OPERATION_TIMEDOUT)||($ok!==false&&gemini_retryable_status($code));
+        if(!$retryable||$attempt===4)break;
+        error_log('gemini_http_retry action='.$action.' model='.$model.' http='.$code.' attempt='.($attempt+1));
+        usleep((1<<$attempt)*1000000+random_int(0,500000));
+    }
     if($ok===false)throw new RuntimeException('A conexão com Gemini falhou ou expirou. Tente novamente.');
-    if(in_array($code,[400,401,403],true))throw new RuntimeException('O Gemini recusou a requisição. Verifique chave, modelo e acesso à API.');
-    if($code===429)throw new RuntimeException('A cota do Gemini foi atingida. Verifique sua conta e tente novamente.');
-    if($code>=500)throw new RuntimeException('O Gemini está temporariamente indisponível. Tente novamente.');
-    if($code!==200)throw new RuntimeException('O Gemini recusou o material ou o modelo selecionado. Tente outro modelo ou revise o material.');
+    if($code===404)throw new RuntimeException('O modelo '.$model.' não está disponível para esta chave (HTTP 404). Teste a conexão em Configurar Gemini e escolha outro.');
+    if($code===400)throw new RuntimeException('O Gemini rejeitou o formato da requisição (HTTP 400). A equipe precisa revisar os parâmetros ou o material enviado.');
+    if(in_array($code,[401,403],true))throw new RuntimeException('A chave não tem acesso à chamada Gemini (HTTP '.$code.'). Teste a conexão em Configurar Gemini.');
+    if($code===413)throw new RuntimeException('O lote de evidências excede o limite aceito pelo Gemini (HTTP 413).');
+    if($code===429)throw new RuntimeException('A cota do Gemini foi atingida (HTTP 429). Verifique sua conta e tente novamente.');
+    if($code>=500)throw new RuntimeException('O Gemini está temporariamente indisponível (HTTP '.$code.'). Tente novamente.');
+    if($code!==200)throw new RuntimeException('O Gemini respondeu HTTP '.$code.' ao modelo '.$model.'.');
     $data=json_decode($response,true);if(!is_array($data))throw new RuntimeException('Resposta inválida do Gemini.');
     return $data;
 }
@@ -97,9 +107,16 @@ function gemini_count(string $key,string $model,array $parts,?callable $transpor
     $response=($transport??'gemini_http')($key,$model,'countTokens',['contents'=>[['role'=>'user','parts'=>$parts]]]);
     $count=$response['totalTokens']??null;if(!is_int($count)||$count<0)throw new RuntimeException('O Gemini não retornou a contagem de tokens.');return $count;
 }
+function gemini_output_limit(array $model): int {return min(16384,(int)$model['output_token_limit']);}
+function gemini_generation_config(string $model,int $outputLimit): array {
+    $config=['maxOutputTokens'=>$outputLimit];
+    if(preg_match('/^gemini-3(?:\.|-)/',$model))$config['thinkingConfig']=['thinkingLevel'=>'low'];
+    else $config['temperature']=0.2;
+    return $config;
+}
 function gemini_generate(string $key,string $model,array $parts,int $outputLimit,?callable $transport=null): string {
     $response=($transport??'gemini_http')($key,$model,'generateContent',[
-        'contents'=>[['role'=>'user','parts'=>$parts]],'generationConfig'=>['maxOutputTokens'=>$outputLimit,'temperature'=>0.2]]);
+        'contents'=>[['role'=>'user','parts'=>$parts]],'generationConfig'=>gemini_generation_config($model,$outputLimit)]);
     $candidate=$response['candidates'][0]??null;$finish=$candidate['finishReason']??'';
     if($finish==='MAX_TOKENS')throw new RuntimeException('O relatório excedeu o limite de saída do modelo. Escolha um modelo com maior capacidade.');
     if($finish!=='STOP')throw new RuntimeException('O Gemini não concluiu esta parte da análise ('.$finish.').');
@@ -119,7 +136,7 @@ function gemini_analyze_group(array $job,array $run,array $project,array $events
     $scope=$total===1?'Todos os segmentos e telas selecionadas dos outputs locais estão neste lote.':'Cobertura parcial dos outputs locais; os demais lotes serão consolidados.';
     $coverage="Parte $number de $total; intervalo de evidências {$first}–{$last}. $scope O relatório final reunirá todas as partes. Esta parte contém ".count(array_filter($events,fn($e)=>$e['type']==='transcript')).' segmentos e '.count(array_filter($events,fn($e)=>$e['type']==='screen')).' telas. Timestamps exibidos ao segundo, a partir dos tempos reais extraídos.'.$duration.' Telas são amostras selecionadas por agrupamento local; vídeo e áudio originais não foram enviados.';
     $parts=gemini_parts($job,$run,$project,$events,$coverage);
-    $limit=(int)$model['input_token_limit'];$output=min(8192,(int)$model['output_token_limit']);
+    $limit=(int)$model['input_token_limit'];$output=gemini_output_limit($model);
     if($limit<=0||$output<1024)throw new RuntimeException('O modelo não informou limites suficientes para análise. Escolha outro modelo.');
     if(gemini_count($key,$job['model'],$parts,$transport)>$limit-$output){
         if(count($events)<2)throw new RuntimeException('Uma evidência não cabe no contexto do modelo. Escolha um modelo maior ou reduza o material.');
@@ -131,7 +148,7 @@ function gemini_analyze_group(array $job,array $run,array $project,array $events
 }
 function gemini_merge(array $reports,string $key,array $job,array $model,?callable $transport,int $depth=0): string {
     if(count($reports)===1)return $reports[0];
-    $output=min(8192,(int)$model['output_token_limit']);$limit=(int)$model['input_token_limit'];
+    $output=gemini_output_limit($model);$limit=(int)$model['input_token_limit'];
     $instruction="Reúna os relatórios parciais abaixo em um único relatório Markdown em português do Brasil. Preserve as 8 seções do prompt original e toda referência verificável. Não crie timestamps, IDs, fatos ou observações visuais; mantenha rótulos Visto/OCR/Dito/Inferência e registre conflitos/lacunas. O material cobre partes do mesmo vídeo; elimine repetições sem descartar conteúdo relevante. Comece por # Relatório:.\n\n";
     $parts=[['text'=>$instruction.implode("\n\n--- RELATÓRIO PARCIAL ---\n\n",$reports)]];
     if(gemini_count($key,$job['model'],$parts,$transport)<=$limit-$output)return gemini_generate($key,$job['model'],$parts,$output,$transport);

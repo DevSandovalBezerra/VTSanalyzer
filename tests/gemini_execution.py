@@ -53,6 +53,11 @@ gemini_execute($job,$mock);$seen['snapshot_cleaned']=!is_dir('/data/gemini/'.$jo
 seen=json.loads(result)
 assert seen['counts']>=1 and seen['generations']>=1 and seen['prompt'] and seen['metadata'],seen
 assert seen['images']>=1 and seen['split_reports']==2 and seen['snapshot_cleaned'],seen
+config=json.loads(php("echo json_encode(['modern'=>gemini_generation_config('gemini-3.8-flash',8192),'legacy'=>gemini_generation_config('gemini-2.5-flash',8192)]);",{}))
+assert config['modern']=={'maxOutputTokens':8192,'thinkingConfig':{'thinkingLevel':'low'}},config
+assert config['legacy']=={'maxOutputTokens':8192,'temperature':0.2},config
+retry=json.loads(php("echo json_encode(['overload'=>gemini_retryable_status(503),'rate'=>gemini_retryable_status(429),'invalid'=>gemini_retryable_status(400),'missing'=>gemini_retryable_status(404)]);",{}))
+assert retry=={'overload':True,'rate':True,'invalid':False,'missing':False},retry
 status,done=request(c,'/runs/'+rid+'/ai/gemini')
 assert status==200 and done['status']=='completed' and done['report'].startswith('# Relatório:'),done
 assert not done['warnings'],done['warnings']

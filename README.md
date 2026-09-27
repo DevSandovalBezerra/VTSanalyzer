@@ -2,7 +2,7 @@
 
 Aplicação interna para destrinchar vídeos: transcrição local, capturas de tela, OCR, revisão de evidências e exportação do conhecimento. A interface prioriza os **Outputs**, com acesso direto a **Transcrição**, **Telas principais** e **Análise por IA**.
 
-Estado em **27/09/2026**: processamento local e leitura de resultados funcionais. O prompt-base está ligado à execução Gemini em segundo plano, com relatório na área Análise por IA e em Outputs. Os testes automatizados usam provedor simulado. A interface mostrou uma chave testada e uma tentativa real que falhou; ainda não há relatório real concluído. O PRD completo ainda não está concluído.
+Estado em **27/09/2026**: processamento local e leitura de resultados funcionais. O prompt-base está ligado à execução Gemini em segundo plano, com relatório na área Análise por IA e em Outputs. Os testes automatizados usam provedor simulado. Uma análise real foi concluída em 27/09 após corrigir a seleção de modelo indisponível e acrescentar tentativas para falhas temporárias da API. O relatório exige revisão humana das referências sinalizadas. O PRD completo ainda não está concluído.
 
 ## Fluxo de uso
 

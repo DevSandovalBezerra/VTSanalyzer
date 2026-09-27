@@ -37,12 +37,10 @@ assert request(a,'/runs/'+saved['run_id']+'/ai/gemini','POST',{},csrf)[0]==422
 php("query('UPDATE ai_settings SET available_models=? WHERE user_id=(SELECT id FROM users WHERE email=?)',[json_encode($v['models']),$v['email']]);",{'email':saved['email'],'models':models})
 assert request(a,'/ai/gemini/model','PATCH',{'model':'gemini-test-pro'},csrf)[0]==422
 php("query('UPDATE ai_settings SET validated_at=now() WHERE user_id=(SELECT id FROM users WHERE email=?)',[$v['email']]);",{'email':saved['email']})
-version=s['draft_version']
-status,s=request(a,'/ai/gemini/model','PATCH',{'model':'gemini-test-pro'},csrf)
-assert status==200 and s['model']=='gemini-test-pro' and s['draft_version']==version,s
 assert request(a,'/ai/gemini/model','PATCH',{'model':'invented-model'},csrf)[0]==422
-status,s=request(a,'/ai/gemini/draft','PATCH',{'prompt':draft,'model':'gemini-test-flash'},csrf)
-assert status==200 and s['model']=='gemini-test-flash'
+assert request(a,'/ai/gemini/draft','PATCH',{'prompt':draft,'model':'gemini-test-flash'},csrf)[0]==422
+probe=json.loads(php("$ok=fn($key,$model,$action,$body)=>['totalTokens'=>7];$fail=fn($key,$model,$action,$body)=>throw new RuntimeException('unavailable');echo json_encode(['working'=>gemini_probe_model('fake','gemini-test-flash',$ok),'blocked'=>gemini_probe_model('fake','gemini-test-flash',$fail),'preferred'=>gemini_preferred_models()[0]]);",{}))
+assert probe=={'working':True,'blocked':False,'preferred':'gemini-3.8-flash'},probe
 key2='replacement-not-real-'+uuid.uuid4().hex
 status,s=request(a,'/ai/gemini/key','POST',{'api_key':key2},csrf)
 assert s['model']=='' and not s['models'] and not s['validated_at'] and s['prompt']==draft

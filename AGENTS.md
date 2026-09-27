@@ -4,7 +4,7 @@ Leia `summary.md`, `docs/PLANOS.md` e o estado do Git ao retomar o trabalho.
 Código canônico nesta máquina: `/home/user/projetos/system-knowledge-extractor` no Ubuntu-24.04.
 `C:/wamp64/www/VTSAnalizer` é entrega/abertura; a aplicação roda em Docker no WSL.
 Prioridades do usuário: uso interno prático, Outputs claros, poucos campos obrigatórios e resultados bloqueados enquanto incompletos.
-O prompt-base Gemini está definido; geração em segundo plano foi implementada, mas validação com chave real do usuário ainda está pendente.
+O prompt-base Gemini está definido e a geração em segundo plano foi validada com a chave cadastrada e um vídeo real em 27/09/2026. Dez horários do relatório exigem revisão humana; consulte docs/GEMINI.md.
 Atualize documentação e status quando entregar mudanças. Não registrar credenciais, vídeos ou outputs privados em Git ou notas de memória.
 O MCP HTTP estático pode não identificar a sessão. Na dúvida, use o escopo `devsandovalbezerra/vtsanalyzer` explicitamente, conforme a ressalva abaixo, para não misturar projetos.
 Se a memória estiver indisponível, continue usando documentação e código, sem inventar histórico.
