@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__.'/progress.php';
 function owned_video(string $vid): array {
     $v=query('SELECT v.* FROM videos v JOIN projects p ON v.project_id=p.id WHERE v.id=? AND p.owner_id=?',[$vid,$_SESSION['user']['id']])->fetch(PDO::FETCH_ASSOC);
     if(!$v)json_response(['error'=>'Vídeo não encontrado.'],404);return $v;
@@ -38,7 +39,7 @@ if(preg_match('#^/api/projects/([a-f0-9]{32})/videos$#',$path,$m)){
         if(disk_free_space('/data')<$size*3+1073741824)json_response(['error'=>'Espaço insuficiente para vídeo e derivados.'],422);
         $sensitivity=$v['sensitivity']??'internal';if(!in_array($sensitivity,['public','internal','sensitive'],true))json_response(['error'=>'Classificação inválida.'],422);
         $vid=id();mkdir('/data/uploads/'.$vid,0770,true);
-        query('INSERT INTO videos(id,project_id,title,original_name,extension,size,origin,context,sensitivity) VALUES (?,?,?,?,?,?,?,?,?)',[$vid,$p['id'],required($v,'title'),$name,$ext,$size,substr((string)($v['origin']??''),0,1000),substr((string)($v['context']??''),0,8000),$sensitivity]);audit('video.upload_started',$vid);json_response(['id'=>$vid,'chunk_size'=>8388608],201);
+        query('INSERT INTO videos(id,project_id,title,original_name,extension,size,origin,context,sensitivity) VALUES (?,?,?,?,?,?,?,?,?)',[$vid,$p['id'],required(['title'=>trim((string)($v['title']??''))?:substr(pathinfo($name,PATHINFO_FILENAME),0,200)],'title'),$name,$ext,$size,substr((string)($v['origin']??''),0,1000),substr((string)($v['context']??''),0,8000),$sensitivity]);audit('video.upload_started',$vid);json_response(['id'=>$vid,'chunk_size'=>8388608],201);
     }
 }
 if(preg_match('#^/api/uploads/([a-f0-9]{32})$#',$path,$m)&&$method==='GET') { $v=owned_video($m[1]);json_response(['video'=>$v,'chunks'=>query('SELECT number,size,sha256 FROM upload_chunks WHERE video_id=? ORDER BY number',[$v['id']])->fetchAll(PDO::FETCH_ASSOC)]); }
@@ -69,12 +70,12 @@ if(preg_match('#^/api/videos/([a-f0-9]{32})/runs$#',$path,$m)&&$method==='POST')
     $interval=filter_var($data['interval']??$presets[$profile][0],FILTER_VALIDATE_FLOAT);$scene=filter_var($data['scene']??$presets[$profile][1],FILTER_VALIDATE_FLOAT);
     if($interval===false||$interval<1||$interval>120||$scene===false||$scene<.05||$scene>.95)json_response(['error'=>'Intervalo ou sensibilidade inválidos.'],422);
     $config=['profile'=>$profile,'interval'=>$interval,'scene'=>$scene,'width'=>$presets[$profile][2],'ocr_language'=>'por+eng','language'=>'pt','model_profile'=>'astra','external_analysis'=>false,'max_frames'=>600];
-    $rid=id();db()->beginTransaction();query('SELECT id FROM videos WHERE id=? FOR UPDATE',[$v['id']]);$version=1+(int)query('SELECT COALESCE(max(version),0) FROM runs WHERE video_id=?',[$v['id']])->fetchColumn();query('INSERT INTO runs(id,video_id,config,version) VALUES (?,?,?,?)',[$rid,$v['id'],json_encode($config),$version]);
+    $rid=id();db()->beginTransaction();query('SELECT id FROM videos WHERE id=? FOR UPDATE',[$v['id']]);if(query("SELECT id FROM runs WHERE video_id=? AND status IN ('queued','processing') LIMIT 1",[$v['id']])->fetchColumn()){db()->rollBack();json_response(['error'=>'Este vídeo já está sendo processado. Acompanhe a análise em Outputs.'],409);}$version=1+(int)query('SELECT COALESCE(max(version),0) FROM runs WHERE video_id=?',[$v['id']])->fetchColumn();query('INSERT INTO runs(id,video_id,config,version) VALUES (?,?,?,?)',[$rid,$v['id'],json_encode($config),$version]);
     foreach(['audio','transcript','frames','ocr','screens'] as $s)query('INSERT INTO stages(run_id,name) VALUES (?,?)',[$rid,$s]);enqueue('pipeline',$v['project_id'],['run_id'=>$rid]);audit('run.queued',$rid);db()->commit();json_response(['id'=>$rid],202);
 }
 if(preg_match('#^/api/runs/([a-f0-9]{32})$#',$path,$m)&&$method==='GET'){
     $r=owned_run($m[1]);$r['config']=json_decode($r['config'],true);$r['stages']=query('SELECT * FROM stages WHERE run_id=? ORDER BY updated_at',[$r['id']])->fetchAll(PDO::FETCH_ASSOC);foreach($r['stages'] as &$s)$s['result']=$s['result']?json_decode($s['result'],true):null;unset($s);
-    $r['claims']=query('SELECT * FROM claims WHERE run_id=? ORDER BY created_at',[$r['id']])->fetchAll(PDO::FETCH_ASSOC);foreach($r['claims'] as &$c)$c['evidence']=json_decode($c['evidence'],true);unset($c);json_response($r);
+    $r['claims']=query('SELECT * FROM claims WHERE run_id=? ORDER BY created_at',[$r['id']])->fetchAll(PDO::FETCH_ASSOC);foreach($r['claims'] as &$c)$c['evidence']=json_decode($c['evidence'],true);unset($c);$r['outputs']=run_output_availability($r,$r['stages']);json_response($r);
 }
 if(preg_match('#^/api/runs/([a-f0-9]{32})/(cancel|resume)$#',$path,$m)&&$method==='POST'){
     $r=owned_run($m[1]);db()->beginTransaction();query('SELECT id FROM runs WHERE id=? FOR UPDATE',[$r['id']]);$r=owned_run($r['id']);

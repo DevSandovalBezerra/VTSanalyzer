@@ -1,4 +1,6 @@
-# Contrato do adaptador Astra
+# Contrato legado do adaptador Astra
+
+Atualização em 27/09/2026: o provedor solicitado agora é Gemini. Este documento preserva o contrato inicial desconectado do pipeline. A configuração atual é descrita em [GEMINI.md](GEMINI.md); o gateway abaixo não é um adaptador Gemini e não deve restringir por sensibilidade o novo fluxo solicitado.
 
 O perfil lógico Astra está implementado em `worker/gateway.py`. O gateway não é conectado ao pipeline enquanto o usuário mantém a integração inativa. Não há chamadas ao Codex, reutilização da sessão do aplicativo, endpoint presumido ou modelo inventado.
 

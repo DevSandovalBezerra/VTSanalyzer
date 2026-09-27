@@ -1,4 +1,14 @@
 <?php
+if($path==='/api/outputs' && $method==='GET') {
+    $rows=query("SELECT p.output_directory,p.id AS project_id,p.name AS project_name,p.status AS project_status,
+        v.id AS video_id,v.title,v.original_name,v.status AS video_status,v.error AS video_error,
+        r.id AS run_id,r.version,r.status,r.error,r.created_at,
+        COALESCE((SELECT json_agg(json_build_object('name',s.name,'status',s.status,'updated_at',s.updated_at,'error',s.error)) FROM stages s WHERE s.run_id=r.id),'[]'::json) AS stages
+        FROM projects p JOIN videos v ON v.project_id=p.id LEFT JOIN runs r ON r.video_id=v.id
+        WHERE p.owner_id=? ORDER BY COALESCE(r.created_at,v.created_at) DESC",[$_SESSION['user']['id']])->fetchAll(PDO::FETCH_ASSOC);
+    foreach($rows as &$row){$row['outputs']=$row['run_id']?run_output_availability([...$row,'id'=>$row['run_id']],json_decode($row['stages'],true)):[];unset($row['output_directory']);}unset($row);json_response($rows);
+}
+
 // Fixed catalog: callers select a key, never a filesystem path.
 function output_documents(string $rid): array {
     $documents=[
@@ -24,10 +34,13 @@ function available_output(string $folder,string $relative): ?string {
 }
 if(preg_match('#^/api/runs/([a-f0-9]{32})/outputs(?:/(text|audio))?$#',$path,$m)&&$method==='GET'){
     $r=owned_run($m[1]);$documents=output_documents($r['id']);$folder=$r['output_directory']?run_output_path($r):'';
+    $stageMap=output_stage_map(query('SELECT name,status,updated_at FROM stages WHERE run_id=?',[$r['id']])->fetchAll(PDO::FETCH_ASSOC));
     $action=$m[2]??'';
     if($action==='text'){
         $key=$_GET['file']??'';
         if(!is_string($key)||!isset($documents[$key]))json_response(['error'=>'Documento não encontrado.'],404);
+        $requiredStage=output_document_stage($key);
+        if($requiredStage && !output_stage_file_ready($r,$stageMap,$requiredStage,$documents[$key][1]))json_response(['error'=>'Este resultado ainda não está pronto. Acompanhe o processamento.'],409);
         $file=$folder?available_output($folder,$documents[$key][1]):null;
         if(!$file)json_response(['error'=>'O arquivo ainda não foi gerado. Atualize após o processamento.'],404);
         header('X-Content-Type-Options: nosniff');
@@ -38,20 +51,22 @@ if(preg_match('#^/api/runs/([a-f0-9]{32})/outputs(?:/(text|audio))?$#',$path,$m)
         json_response(['key'=>$key,'content'=>$content,'truncated'=>filesize($file)>$limit,'bytes'=>filesize($file)]);
     }
     if($action==='audio'){
+        if(!output_stage_file_ready($r,$stageMap,'audio','audio.wav'))json_response(['error'=>'O áudio ainda não está pronto.'],409);
         $file=$folder?available_output($folder,'audio.wav'):null;
         if(!$file)json_response(['error'=>'Áudio ainda indisponível.'],404);
         stream_file($file,'audio/wav');
     }
     $files=[];
     foreach($documents as $key=>[$label,$relative]){
+        $requiredStage=output_document_stage($key);if($requiredStage&&!output_stage_file_ready($r,$stageMap,$requiredStage,$relative))continue;
         $file=$folder?available_output($folder,$relative):null;
         if($file)$files[]=['key'=>$key,'label'=>$label,'path'=>$relative,'bytes'=>filesize($file),'modified'=>gmdate('c',filemtime($file)),'format'=>pathinfo($relative,PATHINFO_EXTENSION)];
     }
     $stage=query("SELECT result FROM stages WHERE run_id=? AND name='frames' AND status='completed'",[$r['id']])->fetchColumn();
     $frames=[];
     foreach(($stage?json_decode($stage,true)['frames']??[]:[]) as $frame){
-        if($folder && available_output($folder,'frames/'.$frame['id'].'.jpg'))$frames[]=$frame;
+        if($folder && output_stage_file_ready($r,$stageMap,'frames','frames.json') && available_output($folder,'frames/'.$frame['id'].'.jpg'))$frames[]=$frame;
     }
     $sync=query("SELECT status,error,updated_at FROM jobs WHERE project_id=? AND kind='outputs' ORDER BY created_at DESC LIMIT 1",[$r['project_id']])->fetch(PDO::FETCH_ASSOC)?:null;
-    json_response(['files'=>$files,'frames'=>$frames,'audio'=>(bool)($folder && available_output($folder,'audio.wav')),'sync'=>$sync]);
+    json_response(['files'=>$files,'frames'=>$frames,'audio'=>output_stage_file_ready($r,$stageMap,'audio','audio.wav'),'sync'=>$sync]);
 }

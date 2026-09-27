@@ -1,3 +1,5 @@
+> Documento de escopo original (23/09/2026), preservado como referência. Não representa status de implementação. As decisões posteriores e o escopo vigente estão em [PLANOS.md](PLANOS.md), incluindo simplificação dos formulários e adoção do Gemini.
+
 # PRD — Video-to-System Knowledge Web
 
 **Nome provisório:** System Knowledge Extractor  

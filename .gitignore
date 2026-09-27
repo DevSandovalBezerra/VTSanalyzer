@@ -10,3 +10,7 @@ frontend/dist/
 .pytest_cache/
 .ske-managed
 .local-access.txt
+
+# Local documentation work files and agent backups
+.planning/tmp/
+*.bak-*

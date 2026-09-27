@@ -1,0 +1,9 @@
+workspace = "devsandovalbezerra"
+project = "vtsanalyzer"
+
+[briefing]
+inject_on_session_start = "true"
+max_chars = 4000
+
+[capture]
+ignore_paths = [".env", ".env.*", ".local-access.txt", "outputs/**", "storage/**", ".delivery/**", "**/*.sqlite", "**/*.dump", "**/*.pem", "**/*.key"]

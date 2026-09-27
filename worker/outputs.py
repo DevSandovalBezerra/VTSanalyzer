@@ -97,6 +97,7 @@ def sync_run(rid):
         structured(folder / 'snapshots' / (snapshot['id'] + '.json'), snapshot)
     structured(folder / 'INDICE.json', {'run_id': rid, 'version': run['version'], 'status': run['status'], 'arquivos': sorted(str(p.relative_to(folder)) for p in folder.rglob('*') if p.is_file() and not p.name.startswith('.') and p.name != 'INDICE.json')})
 
+    structured(folder / '.readiness.json', {'stages': {s['name']: {'status': s['status'], 'updated_at': s['updated_at'].isoformat()} for s in stages}})
 
 def sync_project(pid):
     folder = project_directory(pid)

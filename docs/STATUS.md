@@ -1,5 +1,7 @@
 # Estado de execução do PRD
 
+Este arquivo preserva o histórico por data. Para o estado consolidado atual, consulte `../summary.md` e `PLANOS.md`. Gemini substitui Astra como direção da próxima integração; a geração ainda não foi implementada.
+
 Fonte: PRD 0.2 de 23/09/2026. Este arquivo descreve evidências reais, sem equivaler scaffold a requisito concluído.
 
 ## Fundação validada em 23/09/2026
@@ -84,3 +86,43 @@ Não interpretar a presença dos arquivos de saída como conclusão das funciona
 - Login sem distinção entre maiúsculas/minúsculas, bloqueio de duplicidades inclusive por concorrência, hash Argon2id, CSRF e isolamento de projetos preservados.
 - `tests/registration.py` passou: validação, senha simples, confirmação, duplicidade, sessão, papel comum mesmo com tentativa de enviar admin, hash, acesso antigo e isolamento.
 - Tela de entrada e formulário de cadastro conferidos visualmente no navegador.
+
+## Formulário de envio simplificado — 27/09/2026
+
+- Removida das telas a escolha Público/Interno/Sensível, por decisão do usuário: a aplicação é de uso interno e o foco é extrair e analisar o conteúdo dos vídeos.
+- Novos envios omitem a classificação; o servidor aplica o padrão interno já existente. Dados anteriores permanecem compatíveis.
+- Removido do formulário o aviso técnico sobre execução de arquivos e análises externas. O estado da análise semântica continua informado na tela de processamento.
+
+## Outputs como entrada principal — 27/09/2026
+
+- Menu lateral com Outputs, Transcrição, Telas principais e Análise por IA. Login abre os resultados com filtro por projeto e busca por vídeo.
+- Atalhos para transcrição, telas com OCR e falas do trecho, arquivos e processamento.
+- Objetivo e título são opcionais. Sem título, usa-se o nome do arquivo. Contexto e ajustes de captura ficam recolhidos.
+- Integração de IA inativa; a área dedicada informa esse estado e permite copiar o material para análise, sem apresentar conclusões manuais como resultado de IA.
+
+Validação: `tests/practical_flow.py` passou com mídia sintética, upload retomável, processamento local, formulários mínimos, catálogo com/sem análise e isolamento por proprietário. Conferência no navegador confirmou menu, transcrição direta, 16 telas de um vídeo existente com falas por trecho e estado explícito da IA. O teste antigo `tests/output_viewer.py` dependia de uma fixture temporária ausente; a validação desta alteração foi feita com o teste independente novo e o navegador.
+
+## Progresso e disponibilidade de resultados — 27/09/2026
+
+- Barra de progresso por etapas concluídas, identificação da etapa atual e estados de fila, execução, finalização, conclusão, falha e cancelamento.
+- A central de Outputs acompanha mudanças automaticamente sem recriar filtros; o monitor permanece na aba Processamento durante a atualização. Falhas de conexão têm mensagem e nova tentativa automática.
+- Transcrição, telas, revisão e arquivos têm acessos desabilitados até estarem disponíveis. IA permanece indisponível enquanto não configurada.
+- A API bloqueia leitura e download de documentos de etapas pendentes ou sem sincronização atual. Marcador de versão por etapa impede que arquivos antigos liberem um reprocessamento; outputs antigos possuem compatibilidade por data de geração.
+- Envio duplicado do início da análise bloqueado na interface e no servidor.
+- Validação: `tests/progress.py`, `tests/progress_ui.cjs` e `tests/practical_flow.py` passaram. Incluem fila, liberação parcial, sincronização, rejeição de versão antiga, falha, cancelamento, bloqueio de downloads, isolamento, mídia sintética e permanência do monitor na atualização. Tela conferida no navegador com resultados existentes.
+
+## Gemini: chave e proposta de prompt — 27/09/2026
+
+- Configuração do Gemini acessível pelo menu Análise por IA e pelo painel de cada vídeo.
+- Chave individual criptografada; teste de conexão consulta modelos; prompt e modelo salvos como rascunho.
+- Prompt proposto em `app/prompts/gemini-analysis.md`, ainda aguardando aprovação conjunta. A configuração não envia evidências nem executa geração.
+- Os bloqueios de transcrição/telas permanecem. Análise por IA agora abre a configuração, sem indicar que já exista um resultado gerado.
+
+Validação da configuração Gemini: `tests/gemini_settings.py` passou com chaves fictícias e transporte simulado, sem chamadas externas. Verificados criptografia, vínculo por usuário, máscara, CSRF, troca/remoção, paginação e filtro de modelos, rascunhos e bloqueio de execução. Testes de progresso e sintaxe passaram. Conferência no navegador mostrou a configuração global e, no vídeo existente, 35 trechos, 920 blocos de OCR e 16 imagens propostas. Teste real da conexão depende da chave do usuário.
+
+## Documentação e memória dos agentes — 27/09/2026
+
+- README atualizado; summary, planos, arquitetura, API, configuração, instalação, desenvolvimento, testes e operação documentados.
+- PRD original preservado e identificado como escopo de referência. Histórico de testes separado das validações recentes; gateway Astra identificado como legado.
+- ai-memory 2.0.3 instalado no WSL, com serviço local, providers LLM/embedding desativados, marcador do projeto e instruções/skills oficiais. A instalação Windows anterior foi preservada.
+- MCP Windows conferido; hooks Windows ajustados para bridge WSL, com backup, sem alterar a confiança exigida pelo cliente. Captura automática em nova sessão aguarda ativação/revisão dos hooks pelo cliente.
