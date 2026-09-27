@@ -3,7 +3,7 @@ let activeOutputState=null;
 function processingStages(r){return typeof r.stages==='string'?JSON.parse(r.stages):r.stages||[];}
 function outputEnabled(r,section){if(section==='ai')return true;return !['transcript','screens','files','review','knowledge','ai'].includes(section)||r.outputs?.[section]===true;}
 function outputWaitLabel(r,section){
-    if(section==='ai')return r.outputs?.ai?'Relatório disponível':'Configurar Gemini e analisar';
+    if(section==='ai')return r.outputs?.ai?'Relatório disponível':r.outputs?.screens?'Pronto para iniciar':'Aguardando evidências';
     if(outputEnabled(r,section))return 'Disponível';
     const needed=section==='transcript'?['transcript']:section==='screens'?['transcript','frames','ocr','screens']:processingOrder;
     const stages=processingStages(r).filter(s=>needed.includes(s.name));
@@ -48,6 +48,7 @@ function startRunRefresh(r,section,host){
             if(!host.isConnected)return;
             activeOutputState=next.outputs;applyOutputLocks(next);
             const area=host.querySelector('#live-run-progress');if(area)area.innerHTML=progressView(next);
+            if(section==='ai'&&next.outputs?.screens!==r.outputs?.screens){await runView(r.id,'ai',host);return;}
             if(section==='outputs'){
                 const home=host.querySelector('#run-outputs-home');home.innerHTML=runOutputsHome(next,Object.fromEntries(next.stages.map(s=>[s.name,s])));bindOutputShortcuts(next);applyOutputLocks(next);
             }

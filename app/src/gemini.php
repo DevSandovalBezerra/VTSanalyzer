@@ -91,6 +91,14 @@ if($path==='/api/ai/gemini/test'&&$method==='POST'){
     if(!$changed)json_response(['error'=>'A chave mudou durante o teste. Teste novamente.'],409);
     audit('gemini.connection_tested');json_response(gemini_public_settings(gemini_settings_row()));
 }
+if($path==='/api/ai/gemini/model'&&$method==='PATCH'){
+    $s=gemini_settings_row();$v=input();$model=$v['model']??null;
+    $available=json_decode($s['available_models'],true)?:[];
+    if(!$s['validated_at']||!is_string($model)||!in_array($model,array_column($available,'id'),true))
+        json_response(['error'=>'Teste a conexão e escolha um dos modelos disponíveis.'],422);
+    query('UPDATE ai_settings SET model=?,updated_at=now() WHERE user_id=?',[$model,$s['user_id']]);
+    audit('gemini.model_saved');json_response(gemini_public_settings(gemini_settings_row()));
+}
 if($path==='/api/ai/gemini/draft'&&$method==='PATCH'){
     $s=gemini_settings_row();$v=input();$prompt=$v['prompt']??($s['prompt_draft']?:gemini_default_prompt());$model=$v['model']??$s['model'];
     if(!is_string($prompt)||trim($prompt)===''||strlen($prompt)>24000)json_response(['error'=>'O prompt deve conter texto e ter até 24.000 bytes.'],422);

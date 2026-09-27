@@ -23,15 +23,15 @@ Fluxo simplificado: título por nome de arquivo, objetivo/origem/contexto opcion
 
 ## Gemini: estado atual
 
-O prompt-base revisado está em `app/prompts/gemini-analysis.md`. A tela Análise por IA agora permite executar uma tarefa Gemini em segundo plano com chave própria do usuário, acompanhar progresso/cancelamento e ler ou baixar o relatório também em Outputs. A chave é criptografada por conta; o teste de conexão só lista modelos. O processador envia transcrição, OCR, telas selecionadas e contexto, sem vídeo/áudio originais. Há contagem de tokens, divisão/consolidação, cópia temporária das imagens para manter a versão e avisos de referências não encontradas. Consulte [GEMINI.md](docs/GEMINI.md).
+O prompt-base revisado está em `app/prompts/gemini-analysis.md`. Configurar Gemini reúne chave, teste de conexão, modelo e prompt avançado. Outputs → Análise por IA lista vídeos; a tela de cada vídeo permite iniciar, acompanhar, cancelar e ler/baixar o relatório. Configuração e resultado não dividem o mesmo formulário. A chave é criptografada por conta; o teste de conexão só lista modelos. O processador envia transcrição, OCR, telas selecionadas e contexto, sem vídeo/áudio originais. Há contagem de tokens, divisão/consolidação, cópia temporária das imagens para manter a versão e avisos de referências não encontradas. Consulte [GEMINI.md](docs/GEMINI.md).
 
-**Ainda não houve geração real:** o usuário informou que não cadastrou sua chave. Testes usaram chave e respostas simuladas; qualidade, cota e comportamento de um modelo real dependem de validação posterior na interface. Nunca pedir chave no chat.
+**Ainda não há relatório real concluído:** a interface mostrou uma chave testada e uma tarefa com falha de recusa do material ou modelo em 27/09. Os testes automatizados usam chave e respostas simuladas; a causa da falha real e a qualidade do relatório requerem avaliação posterior. Nunca registrar ou pedir a chave no chat.
 
 O gateway Astra em `worker/gateway.py` é legado e não chama o Gemini.
 
 ## Validação
 
-Em 27/09 passaram `gemini_settings` e `gemini_execution` com transporte simulado, incluindo leitura do relatório em Outputs, sintaxe PHP/JS e acesso autenticado a Outputs e à configuração após migração. O teste real do Gemini aguarda a chave do usuário. O processador `gemini-worker` está ativo. Verificar logs e status após qualquer atualização; o web aplica migrações ao iniciar.
+Em 27/09 passaram `gemini_settings` e `gemini_execution` com transporte simulado, incluindo leitura do relatório em Outputs, sintaxe PHP/JS e acesso autenticado a Outputs e à configuração após migração. O fluxo de interface foi separado em configuração global e análise por vídeo; consulte `gemini_flow_ui.cjs`. O teste real do Gemini aguarda a chave do usuário. O processador `gemini-worker` está ativo. Verificar logs e status após qualquer atualização; o web aplica migrações ao iniciar.
 
 ## Dados e continuidade
 

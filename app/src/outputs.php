@@ -3,6 +3,7 @@ if($path==='/api/outputs' && $method==='GET') {
     $rows=query("SELECT p.output_directory,p.id AS project_id,p.name AS project_name,p.status AS project_status,
         v.id AS video_id,v.title,v.original_name,v.status AS video_status,v.error AS video_error,
         r.id AS run_id,r.version,r.status,r.error,r.created_at,
+        COALESCE((SELECT a.status FROM ai_analyses a WHERE a.run_id=r.id ORDER BY a.created_at DESC LIMIT 1),'not_started') AS ai_status,
         COALESCE((SELECT json_agg(json_build_object('name',s.name,'status',s.status,'updated_at',s.updated_at,'error',s.error)) FROM stages s WHERE s.run_id=r.id),'[]'::json) AS stages
         FROM projects p JOIN videos v ON v.project_id=p.id LEFT JOIN runs r ON r.video_id=v.id
         WHERE p.owner_id=? ORDER BY COALESCE(r.created_at,v.created_at) DESC",[$_SESSION['user']['id']])->fetchAll(PDO::FETCH_ASSOC);

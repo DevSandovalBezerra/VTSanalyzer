@@ -12,6 +12,7 @@ def php(code,data):
     return subprocess.check_output(['docker','compose','exec','-T','--user','www-data','web','php','-r',"require 'src/bootstrap.php'; $path='';$method='GET';require 'src/gemini.php';$v=json_decode(stream_get_contents(STDIN),true);"+code],input=json.dumps(data).encode()).decode()
 assert request(client(),'/ai/gemini')[0]==401
 status,s=request(a,'/ai/gemini');assert status==200 and s['analysis_enabled'],s
+assert all('ai_status' in row for row in request(a,'/outputs')[1])
 assert s['prompt_status']=='ready' and 'Mapa cronológico' in s['prompt']
 assert request(a,'/ai/gemini/key','POST',{'api_key':'x'*32})[0]==419
 assert request(a,'/ai/gemini/key','POST',{'api_key':'x\n'+'y'*30},csrf)[0]==422
@@ -34,6 +35,12 @@ assert request(a,'/ai/gemini/draft','PATCH',{'prompt':''},csrf)[0]==422
 assert request(a,'/runs/'+saved['run_id']+'/ai/gemini','POST',{},csrf)[0]==422
 # Populate a mocked model catalog to verify selection validation without external calls.
 php("query('UPDATE ai_settings SET available_models=? WHERE user_id=(SELECT id FROM users WHERE email=?)',[json_encode($v['models']),$v['email']]);",{'email':saved['email'],'models':models})
+assert request(a,'/ai/gemini/model','PATCH',{'model':'gemini-test-pro'},csrf)[0]==422
+php("query('UPDATE ai_settings SET validated_at=now() WHERE user_id=(SELECT id FROM users WHERE email=?)',[$v['email']]);",{'email':saved['email']})
+version=s['draft_version']
+status,s=request(a,'/ai/gemini/model','PATCH',{'model':'gemini-test-pro'},csrf)
+assert status==200 and s['model']=='gemini-test-pro' and s['draft_version']==version,s
+assert request(a,'/ai/gemini/model','PATCH',{'model':'invented-model'},csrf)[0]==422
 status,s=request(a,'/ai/gemini/draft','PATCH',{'prompt':draft,'model':'gemini-test-flash'},csrf)
 assert status==200 and s['model']=='gemini-test-flash'
 key2='replacement-not-real-'+uuid.uuid4().hex

@@ -140,5 +140,12 @@ Validação da configuração Gemini: `tests/gemini_settings.py` passou com chav
 
 - Prompt-base revisado ligado ao fluxo da aplicação; job assíncrono com chave do usuário, seleção de modelo, contagem de tokens e envio de transcrição/OCR/telas selecionadas.
 - Estados de fila, progresso por partes, cancelamento, falha e relatório; Markdown em Análise por IA e no catálogo Outputs.
-- O usuário ainda não cadastrou a chave. `gemini_settings.py` e `gemini_execution.py` passaram com chave/provedor simulados e mídia sintética. Nenhuma geração real foi afirmada.
+- Na validação automatizada dessa etapa, `gemini_settings.py` e `gemini_execution.py` passaram com chave/provedor simulados e mídia sintética. Nenhum relatório real foi concluído.
 - Durante a integração, a migração 006 ainda não aplicada causou erro 500 em Outputs. Ela foi aplicada e o web passou a executar migrações na inicialização; o acesso voltou a responder 200.
+
+## Fluxo de análise Gemini — 27/09/2026
+
+- Configuração de chave, teste, modelo e prompt avançado isolada em **Configurar Gemini**; modelo salvo sem alterar versão do prompt.
+- **Outputs → Análise por IA** lista os vídeos com o estado mais recente da tarefa. A página de cada vídeo tem percurso único: evidências prontas → iniciar/acompanhar → ler relatório. Falha oferece tentar novamente ou revisar modelo e prompt; a configuração permite voltar ao mesmo vídeo.
+- Testes `gemini_flow_ui.cjs`, `gemini_settings.py` e `gemini_execution.py` passaram com provedor simulado; sintaxe PHP/JS e navegação no Chrome verificadas. Nenhum teste automatizado enviou material ao Google.
+- Na interface havia uma chave testada e uma tarefa real com falha por recusa do material ou modelo. A causa precisa ser investigada antes de afirmar que a geração real está funcional. O agente não iniciou outra tarefa nem alterou a configuração da conta.

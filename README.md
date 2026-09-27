@@ -2,7 +2,7 @@
 
 Aplicação interna para destrinchar vídeos: transcrição local, capturas de tela, OCR, revisão de evidências e exportação do conhecimento. A interface prioriza os **Outputs**, com acesso direto a **Transcrição**, **Telas principais** e **Análise por IA**.
 
-Estado em **27/09/2026**: processamento local e leitura de resultados funcionais. O prompt-base está ligado à execução Gemini em segundo plano, com relatório na área Análise por IA e em Outputs. A geração real aguarda uma chave inserida pelo usuário; os testes usaram provedor simulado. O PRD completo ainda não está concluído.
+Estado em **27/09/2026**: processamento local e leitura de resultados funcionais. O prompt-base está ligado à execução Gemini em segundo plano, com relatório na área Análise por IA e em Outputs. Os testes automatizados usam provedor simulado. A interface mostrou uma chave testada e uma tentativa real que falhou; ainda não há relatório real concluído. O PRD completo ainda não está concluído.
 
 ## Fluxo de uso
 
@@ -11,7 +11,7 @@ Estado em **27/09/2026**: processamento local e leitura de resultados funcionais
 3. Envie um vídeo MP4, MOV, MKV ou WebM. O título pode ficar vazio: será usado o nome do arquivo. Origem e contexto são opcionais.
 4. Após a validação do vídeo, inicie uma análise e acompanhe o processamento.
 5. Abra a transcrição ou as telas quando o respectivo resultado estiver disponível. A barra indica etapas concluídas; não estima tempo restante.
-6. Em **Análise por IA**, salve sua chave Gemini, teste a conexão, escolha um modelo e revise o prompt. No vídeo já processado, clique em **Analisar com Gemini**; acompanhe o progresso e leia ou baixe o relatório. Salvar o prompt não inicia a análise.
+6. Em **Configurar Gemini**, salve sua chave, teste a conexão e escolha o modelo. O prompt-base já está pronto; sua edição fica em instruções avançadas. Depois abra **Outputs → Análise por IA**, escolha um vídeo processado, clique em **Iniciar análise com Gemini**, acompanhe o progresso e leia ou baixe o relatório na mesma tela.
 
 O menu Outputs abre depois do login e permite filtrar por projeto ou buscar vídeos. Cada versão de análise tem seus próprios resultados. A galeria associa imagens ao OCR e às falas do trecho. O leitor oferece busca, cópia e download. A revisão manual e a exportação de conhecimento continuam disponíveis.
 
